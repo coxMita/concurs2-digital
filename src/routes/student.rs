@@ -162,10 +162,10 @@ pub async fn waiting(
     State(state): State<AppState>,
     student: CurrentStudent,
 ) -> AppResult<Response> {
-    if let Some(to) = next_step(&state, &student).await? {
-        if to != "/asteptare" {
-            return Ok(Redirect::to(to).into_response());
-        }
+    if let Some(to) = next_step(&state, &student).await?
+        && to != "/asteptare"
+    {
+        return Ok(Redirect::to(to).into_response());
     }
     let content = state.cache.get(&state.db, student.state.exam_id).await?;
     Ok(render(&WaitingPage {
