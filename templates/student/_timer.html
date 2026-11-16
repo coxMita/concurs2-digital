@@ -1,0 +1,4 @@
+<div class="timer{% if warning %} is-warning{% endif %}" role="timer" aria-live="off" data-deadline="{{ deadline }}" data-now="{{ now }}" title="Timp rămas">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <span data-remaining>{{ remaining }}</span>
+</div>

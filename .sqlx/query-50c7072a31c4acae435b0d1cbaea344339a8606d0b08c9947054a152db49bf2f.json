@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH s AS (UPDATE students SET active_session = $2 WHERE id = $1 RETURNING id)\n         UPDATE attempts SET login_count = login_count + 1\n         WHERE student_id = (SELECT id FROM s) AND submitted_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "50c7072a31c4acae435b0d1cbaea344339a8606d0b08c9947054a152db49bf2f"
+}

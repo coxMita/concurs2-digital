@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH ok AS (\n               SELECT a.id FROM attempts a\n               WHERE a.id = $1 AND a.submitted_at IS NULL AND a.deadline > now()\n                 AND EXISTS (SELECT 1 FROM attempt_questions aq\n                             WHERE aq.attempt_id = $1 AND aq.question_id = $2)\n               FOR SHARE OF a\n           ), del AS (\n               DELETE FROM answer_selections\n               WHERE attempt_id = $1 AND question_id = $2 AND option_id <> ALL($3)\n                 AND EXISTS (SELECT 1 FROM ok)\n           ), ins AS (\n               INSERT INTO answer_selections (attempt_id, question_id, option_id)\n               SELECT $1, $2, o FROM unnest($3::uuid[]) AS o\n               WHERE EXISTS (SELECT 1 FROM ok)\n               ON CONFLICT DO NOTHING\n           )\n           SELECT EXISTS (SELECT 1 FROM ok) AS \"ok!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ok!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0c464fe982dd456eae0c9626981ddaf013d7a609089e6fde0bb624eb799c943a"
+}

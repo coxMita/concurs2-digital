@@ -1,0 +1,160 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.exam_id, s.full_name, s.username, s.active_session,\n                  a.id AS \"attempt_id?\", a.started_at AS \"started_at?\", a.deadline AS \"deadline?\",\n                  a.submitted_at, a.earned_points, a.max_points AS \"max_points?\", a.percentage\n           FROM students s LEFT JOIN attempts a ON a.student_id = s.id\n           WHERE s.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "exam_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "exam_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "full_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "full_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "username",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "active_session",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "active_session"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "attempt_id?",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "started_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "started_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "deadline?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "deadline"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "submitted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "submitted_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "earned_points",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "earned_points"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "max_points?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "max_points"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "percentage",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "percentage"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "49a78666b2c86bd5268cf81524f0180955a6ec98c4f0ed1bcacf23e8b8e34dfa"
+}

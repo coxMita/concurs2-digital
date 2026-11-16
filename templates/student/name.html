@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Numele tău{% endblock %}
+{% block main_class %}main--center{% endblock %}
+{% block content %}
+<div class="auth">
+  <div class="auth__logo" aria-hidden="true">C</div>
+  <h1>Cum te numești?</h1>
+  <p class="lead">Scrie-ți numele complet, așa cum apare în catalog. Îl vei introduce o singură dată.</p>
+  <div class="card">
+    {% if let Some(e) = error %}<div class="alert alert--error" role="alert"><p>{{ e }}</p></div>{% endif %}
+    <form method="post" action="/nume">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <div class="field">
+        <label for="full_name">Nume și prenume</label>
+        <input class="input" id="full_name" name="full_name" required minlength="3" maxlength="120" autocomplete="name" autofocus>
+      </div>
+      <button class="btn btn--primary btn--lg btn--block mt-4" type="submit">Continuă</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

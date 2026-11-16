@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Testul nu a început încă{% endblock %}
+{% block main_class %}main--center{% endblock %}
+{% block content %}
+<div class="auth text-center" hx-get="/asteptare/stare" hx-trigger="every 5s" hx-swap="none">
+  <div class="pulse" aria-hidden="true"></div>
+  <span class="eyebrow">{{ title }}</span>
+  <h1>Testul nu a început încă</h1>
+  <p class="lead">Așteaptă ca profesorul să deschidă testul. Pagina se actualizează singură și vei intra automat în test.</p>
+  {% if !description.is_empty() %}
+  <div class="card card--flat text-left">
+    <h3>Instrucțiuni</h3>
+    <p class="prewrap mb-0">{{ description }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -39,6 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = AppState::new(pool, config.clone());
     setup::announce_if_needed(&state).await?;
+    concurs::services::finalizer::spawn(state.clone());
 
     let router = app::build(state, store, key);
     let listener = tokio::net::TcpListener::bind(config.bind_addr).await?;

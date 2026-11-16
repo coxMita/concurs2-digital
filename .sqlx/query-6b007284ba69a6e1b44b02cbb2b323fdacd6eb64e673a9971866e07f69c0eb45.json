@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO attempts (student_id, exam_id, started_at, deadline, max_points)\n         SELECT s.id, s.exam_id, now(),\n                now() + make_interval(mins => e.duration_minutes + s.extra_minutes), $3\n         FROM students s JOIN exams e ON e.id = s.exam_id\n         WHERE s.id = $1 AND s.exam_id = $2\n         ON CONFLICT (student_id) DO NOTHING\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6b007284ba69a6e1b44b02cbb2b323fdacd6eb64e673a9971866e07f69c0eb45"
+}

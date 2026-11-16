@@ -57,3 +57,58 @@ impl CurrentAdmin {
         crate::web::set_flash(&self.session, kind, message).await
     }
 }
+
+pub const STUDENT_KEY: &str = "student_id";
+pub const STUDENT_SESSION_KEY: &str = "student_sess";
+
+/// The logged-in student, with their attempt. Rejects sessions replaced by a newer login.
+pub struct CurrentStudent {
+    pub state: crate::db::attempts::StudentState,
+    pub session: Session,
+}
+
+impl FromRequestParts<AppState> for CurrentStudent {
+    type Rejection = AppError;
+
+    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, AppError> {
+        let hx = is_htmx(&parts.headers);
+        let session = Session::from_request_parts(parts, state)
+            .await
+            .map_err(|_| AppError::StudentLogin { hx })?;
+        let (Some(id), Some(sess)) = (
+            session.get::<Uuid>(STUDENT_KEY).await?,
+            session.get::<Uuid>(STUDENT_SESSION_KEY).await?,
+        ) else {
+            return Err(AppError::StudentLogin { hx });
+        };
+        let student = crate::db::attempts::student_state(&state.db, id).await?;
+        match student {
+            Some(s) if s.active_session == Some(sess) => Ok(Self { state: s, session }),
+            Some(_) => {
+                session.flush().await?;
+                crate::web::set_flash(
+                    &session,
+                    "error",
+                    "Ai fost deconectat deoarece contul tău a fost folosit pentru autentificare pe alt dispozitiv.",
+                )
+                .await?;
+                Err(AppError::StudentLogin { hx })
+            }
+            None => {
+                session.flush().await?;
+                Err(AppError::StudentLogin { hx })
+            }
+        }
+    }
+}
+
+impl CurrentStudent {
+    pub async fn ctx(&self) -> Result<crate::web::Ctx, AppError> {
+        let name = self
+            .state
+            .full_name
+            .clone()
+            .unwrap_or_else(|| self.state.username.clone());
+        crate::web::Ctx::build(&self.session, "student", Some(name), "").await
+    }
+}

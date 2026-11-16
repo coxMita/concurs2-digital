@@ -61,6 +61,7 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
         GovernorLayer::new(governor).error_handler(|_| AppError::TooManyRequests.into_response());
 
     let login_posts = Router::new()
+        .route("/", post(routes::student::login))
         .route("/admin/login", post(routes::auth::admin_login))
         .layer(login_limit);
 
@@ -89,6 +90,19 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
         )
         .route("/admin/login", get(routes::auth::admin_login_page))
         .route("/logout", post(routes::auth::logout))
+        .route(
+            "/nume",
+            get(routes::student::name_page).post(routes::student::name_submit),
+        )
+        .route("/asteptare", get(routes::student::waiting))
+        .route("/asteptare/stare", get(routes::student::waiting_status))
+        .route("/test", get(routes::student::exam))
+        .route("/test/raspuns", post(routes::student::save_answer))
+        .route(
+            "/test/finalizeaza",
+            get(routes::student::confirm).post(routes::student::submit),
+        )
+        .route("/rezultat", get(routes::student::result))
         .merge(login_posts)
         .nest("/admin", admin_routes)
         .fallback(|| async { AppError::NotFound })

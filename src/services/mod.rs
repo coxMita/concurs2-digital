@@ -7,4 +7,5 @@ pub mod finalizer;
 pub mod grading;
 pub mod hashing;
 pub mod import_format;
+pub mod shuffle;
 pub mod uploads;

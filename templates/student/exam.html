@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Întrebarea {{ number }} · {{ title }}{% endblock %}
+{% block head %}<script src="/static/js/exam.js?v={{ ctx.v }}" defer></script>{% endblock %}
+{% block bar %}
+<div class="exam-bar">
+  <div class="exam-bar__inner">
+    <span class="exam-bar__title">{{ title }}</span>
+    <span class="saved" data-saved role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-saved-text>Salvat</span>
+    </span>
+    {% include "student/_timer.html" %}
+  </div>
+</div>
+{% endblock %}
+{% block main_class %}main--narrow{% endblock %}
+{% block content %}
+{% if number == 1 && !description.is_empty() %}
+<details class="card card--flat card--tight mb-5">
+  <summary class="label">Instrucțiuni</summary>
+  <p class="prewrap mt-4 mb-0">{{ description }}</p>
+</details>
+{% endif %}
+
+<article class="card question-card" aria-labelledby="q-text">
+  <div class="row row--between mb-4">
+    <span class="eyebrow mb-0">Întrebarea {{ number }} din {{ total }}</span>
+    <span class="muted small">{{ points }} {% if points == 1 %}punct{% else %}puncte{% endif %}</span>
+  </div>
+  {% if let Some(img) = image %}<img class="q-image" src="/uploads/{{ img }}" alt="Imagine pentru întrebarea {{ number }}">{% endif %}
+  <h2 id="q-text">{{ text }}</h2>
+  <p class="question-hint">
+    {% if multiple %}<span aria-hidden="true">☑</span> Alege toate răspunsurile corecte{% else %}<span aria-hidden="true">◉</span> Alege un răspuns{% endif %}
+  </p>
+
+  <form id="answer-form" hx-post="/test/raspuns" hx-trigger="change" hx-swap="none" hx-sync="this:queue last" data-number="{{ number }}">
+    <input type="hidden" name="q" value="{{ question_id }}">
+    <fieldset class="options">
+      <legend class="sr-only">Variante de răspuns</legend>
+      {% for o in options %}
+      <label class="option {% if multiple %}option--multiple{% else %}option--single{% endif %}">
+        <input type="{% if multiple %}checkbox{% else %}radio{% endif %}" name="opt" value="{{ o.id }}"{% if o.selected %} checked{% endif %}>
+        <span class="option__mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="option__text">{{ o.text }}</span>
+      </label>
+      {% endfor %}
+    </fieldset>
+  </form>
+  <div class="row row--between">
+    <button class="link-btn small" type="button" data-clear>Șterge răspunsul</button>
+  </div>
+
+  <div class="question-foot mt-5">
+    <a class="btn btn--ghost" href="/test/finalizeaza">Finalizează</a>
+    <div class="question-foot__nav">
+      {% if let Some(p) = prev %}<a class="btn" href="/test?q={{ p }}" rel="prev">← Înapoi</a>{% else %}<span class="btn" aria-disabled="true">← Înapoi</span>{% endif %}
+      {% if let Some(n) = next %}<a class="btn btn--primary" href="/test?q={{ n }}" rel="next">Următoarea →</a>{% else %}<a class="btn btn--primary" href="/test/finalizeaza">Finalizează →</a>{% endif %}
+    </div>
+  </div>
+</article>
+
+<nav class="card card--flat card--tight mt-5" aria-label="Navigare întrebări">
+  <div class="row row--between mb-4">
+    <span class="label">Întrebări</span>
+    <span class="muted small"><span data-answered>{{ answered }}</span> din {{ total }} cu răspuns</span>
+  </div>
+  <div class="qnav">
+    {% for p in pills %}
+    <a href="/test?q={{ p.n }}"{% if p.answered %} class="is-answered"{% endif %}{% if p.current %} aria-current="step"{% endif %} aria-label="Întrebarea {{ p.n }}{% if p.answered %}, cu răspuns{% endif %}">{{ p.n }}</a>
+    {% endfor %}
+  </div>
+</nav>
+{% endblock %}

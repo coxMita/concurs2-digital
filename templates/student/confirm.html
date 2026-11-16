@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Finalizează · {{ title }}{% endblock %}
+{% block head %}<script src="/static/js/exam.js?v={{ ctx.v }}" defer></script>{% endblock %}
+{% block bar %}
+<div class="exam-bar">
+  <div class="exam-bar__inner">
+    <span class="exam-bar__title">{{ title }}</span>
+    {% include "student/_timer.html" %}
+  </div>
+</div>
+{% endblock %}
+{% block main_class %}main--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <span class="eyebrow">Finalizare</span>
+  <h1>Trimiți testul?</h1>
+  {% if unanswered.is_empty() %}
+  <p class="lead">Ai răspuns la toate cele {{ total }} întrebări. După trimitere nu mai poți modifica răspunsurile.</p>
+  {% else %}
+  <div class="alert alert--warn" role="alert">
+    <div>
+      <p><strong>{{ unanswered.len() }} {% if unanswered.len() == 1 %}întrebare nu are{% else %}întrebări nu au{% endif %} răspuns:</strong></p>
+      <div class="qnav mt-4">
+        {% for n in unanswered %}<a href="/test?q={{ n }}" aria-label="Mergi la întrebarea {{ n }}">{{ n }}</a>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <p>După trimitere nu mai poți modifica răspunsurile.</p>
+  {% endif %}
+  <div class="form-actions">
+    <form method="post" action="/test/finalizeaza">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <button class="btn btn--primary btn--lg" type="submit">Trimite testul</button>
+    </form>
+    <a class="btn btn--lg" href="/test">Înapoi la test</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Rezultat · {{ title }}{% endblock %}
+{% block main_class %}main--narrow{% endblock %}
+{% block content %}
+<div class="card text-center">
+  {% if visibility == "none" %}
+  <div class="check-hero" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <h1>Testul a fost trimis</h1>
+  <p class="lead center-block">Răspunsurile tale au fost înregistrate. Poți închide această pagină.</p>
+  {% else %}
+  <span class="eyebrow">{{ title }}</span>
+  <h1>Testul a fost trimis</h1>
+  <svg class="score-ring" viewBox="0 0 160 160" role="img" aria-label="Nota: {{ percentage }}%">
+    <circle cx="80" cy="80" r="70" fill="none" stroke-width="14" class="score-ring__track"/>
+    <circle cx="80" cy="80" r="70" fill="none" stroke-width="14" class="score-ring__bar" stroke-dasharray="{{ ring }}" stroke-linecap="round" transform="rotate(-90 80 80)"/>
+    <text x="80" y="88" text-anchor="middle" class="score-ring__text">{{ percentage }}%</text>
+  </svg>
+  <p class="lead center-block">Ai obținut {{ earned }} din {{ max }} puncte.</p>
+  {% endif %}
+</div>
+
+{% if !review.is_empty() %}
+<h2 class="mt-6">Răspunsurile tale</h2>
+<div class="stack">
+  {% for q in review %}
+  <article class="card question-card" aria-labelledby="rq-{{ q.n }}">
+    <div class="row row--between mb-4">
+      <span class="eyebrow mb-0">Întrebarea {{ q.n }} · {{ q.points }} p</span>
+      <span class="badge badge--{{ q.outcome_class }}">{{ q.outcome }}</span>
+    </div>
+    {% if let Some(img) = q.image %}<img class="q-image" src="/uploads/{{ img }}" alt="Imagine pentru întrebarea {{ q.n }}">{% endif %}
+    <h3 id="rq-{{ q.n }}" class="prewrap">{{ q.text }}</h3>
+    <div class="options">
+      {% for o in q.options %}
+      <div class="option option--review {% if q.multiple %}option--multiple{% else %}option--single{% endif %} {{ o.class }}">
+        <span class="option__mark" aria-hidden="true">{% if o.selected || !o.class.is_empty() %}<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endif %}</span>
+        <span class="option__text">{{ o.text }}</span>
+        {% if !o.tag.is_empty() %}<span class="option__tag">{{ o.tag }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
