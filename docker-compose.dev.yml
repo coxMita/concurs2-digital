@@ -1,0 +1,20 @@
+# Local development only: Postgres published on 127.0.0.1:5432.
+# Usage: docker compose -f docker-compose.dev.yml up -d
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: concurs
+      POSTGRES_PASSWORD: concurs
+      POSTGRES_DB: concurs
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - devdb:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U concurs"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  devdb:

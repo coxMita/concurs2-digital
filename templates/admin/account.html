@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Cont{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Setări</span>
+    <h1>Cont</h1>
+  </div>
+</div>
+<div class="grid grid--2">
+  <section class="card" aria-labelledby="pw-title">
+    <h2 id="pw-title">Schimbă parola</h2>
+    <p class="muted">Pentru contul <strong>{{ ctx.user.as_deref().unwrap_or("") }}</strong>.</p>
+    <form method="post" action="/admin/cont/parola">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <div class="field">
+        <label for="current">Parola actuală</label>
+        <input class="input" id="current" name="current" type="password" required autocomplete="current-password">
+      </div>
+      <div class="field">
+        <label for="password">Parola nouă</label>
+        <input class="input" id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
+        <p class="hint">Cel puțin 8 caractere.</p>
+      </div>
+      <div class="field">
+        <label for="password_confirm">Confirmă parola nouă</label>
+        <input class="input" id="password_confirm" name="password_confirm" type="password" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="form-actions"><button class="btn btn--primary" type="submit">Salvează parola</button></div>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="new-admin-title">
+    <h2 id="new-admin-title">Adaugă administrator</h2>
+    <p class="muted">Un alt profesor care poate gestiona toate testele.</p>
+    <form method="post" action="/admin/cont/admini">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <div class="field">
+        <label for="na-username">Utilizator</label>
+        <input class="input" id="na-username" name="username" required minlength="3" maxlength="32" autocomplete="off" autocapitalize="none" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="na-password">Parolă</label>
+        <input class="input" id="na-password" name="password" type="password" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label for="na-password2">Confirmă parola</label>
+        <input class="input" id="na-password2" name="password_confirm" type="password" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="form-actions"><button class="btn btn--primary" type="submit">Adaugă</button></div>
+    </form>
+  </section>
+</div>
+
+<section class="mt-6" aria-labelledby="admins-title">
+  <h2 id="admins-title">Administratori</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Utilizator</th><th>Creat la</th><th class="actions"><span class="sr-only">Acțiuni</span></th></tr></thead>
+      <tbody>
+        {% for a in admins %}
+        <tr>
+          <td><strong>{{ a.username }}</strong>{% if a.id == me %} <span class="badge badge--plain">dvs.</span>{% endif %}</td>
+          <td class="muted">{{ self.created(a) }}</td>
+          <td class="actions">
+            {% if a.id != me %}
+            <form class="inline-form" method="post" action="/admin/cont/admini/{{ a.id }}/sterge" data-confirm="Ștergeți administratorul „{{ a.username }}”?">
+              <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+              <button class="btn btn--danger btn--sm" type="submit">Șterge</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

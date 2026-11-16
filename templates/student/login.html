@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Autentificare{% endblock %}
+{% block main_class %}main--center{% endblock %}
+{% block content %}
+<div class="auth">
+  <div class="auth__logo" aria-hidden="true">C</div>
+  <h1>Bine ai venit</h1>
+  <p class="lead">Introdu utilizatorul și parola primite de la profesor.</p>
+  <div class="card">
+    {% if let Some(e) = error %}<div class="alert alert--error" role="alert"><p>{{ e }}</p></div>{% endif %}
+    <form method="post" action="/">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <div class="field">
+        <label for="username">Utilizator</label>
+        <input class="input" id="username" name="username" value="{{ username }}" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Parolă</label>
+        <input class="input" id="password" name="password" type="password" required autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
+      </div>
+      <button class="btn btn--primary btn--lg btn--block mt-4" type="submit">Intră în test</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

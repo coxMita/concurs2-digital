@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f6f5f2">
+  <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false,"allowScriptTags":false,"historyCacheSize":0}'>
+  <title>{% block title %}Concurs{% endblock %} · Concurs</title>
+  <link rel="preload" href="/static/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/app.css?v={{ ctx.v }}">
+  <link rel="icon" href="/static/img/icon.svg" type="image/svg+xml">
+  <script src="/static/js/htmx.min.js?v={{ ctx.v }}" defer></script>
+  <script src="/static/js/app.js?v={{ ctx.v }}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body{% if !ctx.csrf.is_empty() %} hx-headers='{"X-CSRF-Token": "{{ ctx.csrf }}"}'{% endif %}>
+  <a class="skip-link" href="#continut">Sari la conținut</a>
+  <header class="site-header">
+    <div class="site-header__inner">
+      {% if ctx.area == "admin" %}
+      <a class="brand" href="/admin"><span class="brand__mark" aria-hidden="true">C</span><span>Concurs</span></a>
+      <nav class="nav" aria-label="Meniu principal">
+        <a href="/admin/teste"{% if ctx.nav == "teste" %} aria-current="page"{% endif %}>Teste</a>
+        <a href="/admin/cont"{% if ctx.nav == "cont" %} aria-current="page"{% endif %}>Cont</a>
+      </nav>
+      {% else %}
+      <span class="brand"><span class="brand__mark" aria-hidden="true">C</span><span>Concurs</span></span>
+      {% endif %}
+      {% if let Some(user) = ctx.user %}
+      <div class="header-user">
+        <span class="header-user__name">{{ user }}</span>
+        {% block header_extra %}{% endblock %}
+        <form method="post" action="/logout">
+          <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+          <button class="btn btn--ghost btn--sm" type="submit">Ieșire</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+  {% block bar %}{% endblock %}
+  <main id="continut" class="main {% block main_class %}{% endblock %}">
+    {% if let Some(flash) = ctx.flash %}
+    <div class="alert alert--{{ flash.kind }}" role="status"><p>{{ flash.message }}</p></div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

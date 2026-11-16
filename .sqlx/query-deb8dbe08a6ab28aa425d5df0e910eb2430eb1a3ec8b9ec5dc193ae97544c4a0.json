@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO admins (username, password_hash)\n         SELECT $1, $2 WHERE NOT EXISTS (SELECT 1 FROM admins)\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "admins",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "deb8dbe08a6ab28aa425d5df0e910eb2430eb1a3ec8b9ec5dc193ae97544c4a0"
+}

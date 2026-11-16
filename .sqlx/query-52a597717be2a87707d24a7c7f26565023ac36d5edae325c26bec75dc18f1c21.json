@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM admins WHERE id = $1 AND (SELECT count(*) FROM admins) > 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "52a597717be2a87707d24a7c7f26565023ac36d5edae325c26bec75dc18f1c21"
+}

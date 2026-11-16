@@ -1,0 +1,11 @@
+//! Online multiple-choice exam platform.
+
+pub mod app;
+pub mod auth;
+pub mod config;
+pub mod db;
+pub mod error;
+pub mod routes;
+pub mod services;
+pub mod state;
+pub mod web;
