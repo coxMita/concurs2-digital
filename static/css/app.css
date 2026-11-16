@@ -565,3 +565,4 @@ dialog.modal[open] { animation: modal-in var(--t-slow); }
 }
 .row--center { justify-content: center; }
 .fieldset { border: 0; padding: 0; margin: 0 0 var(--s-4); min-width: 0; }
+.input--mini { width: 80px; }

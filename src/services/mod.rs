@@ -2,6 +2,7 @@
 
 pub mod credentials;
 pub mod exam_cache;
+pub mod export;
 pub mod finalizer;
 pub mod grading;
 pub mod hashing;

@@ -15,6 +15,7 @@ tower-sessions = { version = "0.15", default-features = false, features = ["axum
 tower-sessions-sqlx-store = { version = "0.16", features = ["postgres"] }
 argon2 = "0.6"
 rand = "0.10"
+rust_xlsxwriter = "0.102"
 tower_governor = { version = "0.8", default-features = false, features = ["axum"] }
 moka = { version = "0.12", features = ["future", "sync"] }
 tracing = "0.1"
@@ -30,6 +31,7 @@ time = "0.3"
 
 [dev-dependencies]
 http-body-util = "0.1"
+calamine = "0.30"
 
 [profile.release]
 lto = "thin"

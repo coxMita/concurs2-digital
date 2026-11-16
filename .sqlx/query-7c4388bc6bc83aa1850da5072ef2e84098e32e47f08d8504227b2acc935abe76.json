@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM attempts a USING students s\n         WHERE a.student_id = s.id AND s.id = $1 AND s.exam_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7c4388bc6bc83aa1850da5072ef2e84098e32e47f08d8504227b2acc935abe76"
+}

@@ -85,6 +85,39 @@ pub fn dedupe(base: &str, taken: &std::collections::HashSet<String>) -> String {
         .expect("infinite iterator")
 }
 
+/// Plans usernames for new accounts: one per name (e.g. "ana.popescu", deduplicated),
+/// then `unnamed` accounts "elev001", "elev002", ... continuing after the highest
+/// existing number. `taken` is updated with the new usernames.
+pub fn plan_usernames(
+    names: &[String],
+    unnamed: usize,
+    taken: &mut std::collections::HashSet<String>,
+) -> Vec<(Option<String>, String)> {
+    let mut out = Vec::with_capacity(names.len() + unnamed);
+    for name in names {
+        let base = username_base_from_name(name).unwrap_or_else(|| "elev".to_string());
+        let u = dedupe(&base, taken);
+        taken.insert(u.clone());
+        out.push((Some(name.clone()), u));
+    }
+    let mut n = taken
+        .iter()
+        .filter_map(|u| u.strip_prefix("elev")?.parse::<u32>().ok())
+        .max()
+        .unwrap_or(0);
+    for _ in 0..unnamed {
+        loop {
+            n += 1;
+            let u = format!("elev{n:03}");
+            if taken.insert(u.clone()) {
+                out.push((None, u));
+                break;
+            }
+        }
+    }
+    out
+}
+
 /// Normalizes a username typed at login: trimmed, lowercase.
 pub fn normalize_username(u: &str) -> String {
     u.trim().to_lowercase()
@@ -118,5 +151,22 @@ mod tests {
             .into_iter()
             .collect();
         assert_eq!(dedupe("ana.popescu", &taken), "ana.popescu.3");
+    }
+
+    #[test]
+    fn plans_usernames() {
+        let mut taken: std::collections::HashSet<String> =
+            ["elev007".to_string(), "ana.popescu".to_string()]
+                .into_iter()
+                .collect();
+        let names = vec!["Ana Popescu".to_string(), "Ana Popescu".to_string()];
+        let plan = plan_usernames(&names, 2, &mut taken);
+        let users: Vec<&str> = plan.iter().map(|p| p.1.as_str()).collect();
+        assert_eq!(
+            users,
+            ["ana.popescu.2", "ana.popescu.3", "elev008", "elev009"]
+        );
+        assert_eq!(plan[0].0.as_deref(), Some("Ana Popescu"));
+        assert_eq!(plan[2].0, None);
     }
 }

@@ -3,6 +3,7 @@
 pub mod account;
 pub mod exams;
 pub mod questions;
+pub mod students;
 
 use axum::{
     Router,
@@ -58,4 +59,18 @@ pub fn router() -> Router<AppState> {
             get(questions::import_page).post(questions::import_submit),
         )
         .route("/teste/{id}/export-intrebari", get(questions::export))
+        .route("/teste/{id}/elevi", get(students::list))
+        .route("/teste/{id}/elevi/genereaza", post(students::generate))
+        .route(
+            "/teste/{id}/elevi/credentiale.xlsx",
+            post(students::credentials_download),
+        )
+        .route("/teste/{id}/elevi/sterge", post(students::delete_many))
+        .route("/teste/{id}/elevi/{sid}/nume", post(students::rename))
+        .route(
+            "/teste/{id}/elevi/{sid}/parola",
+            post(students::reset_password),
+        )
+        .route("/teste/{id}/elevi/{sid}/timp", post(students::extra_time))
+        .route("/teste/{id}/elevi/{sid}/reluare", post(students::retake))
 }

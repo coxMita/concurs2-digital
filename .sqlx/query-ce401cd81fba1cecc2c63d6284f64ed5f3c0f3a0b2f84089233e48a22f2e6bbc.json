@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE attempts a\n         SET deadline = a.started_at + make_interval(mins => e.duration_minutes + $2)\n         FROM exams e\n         WHERE a.student_id = $1 AND a.submitted_at IS NULL AND e.id = a.exam_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ce401cd81fba1cecc2c63d6284f64ed5f3c0f3a0b2f84089233e48a22f2e6bbc"
+}

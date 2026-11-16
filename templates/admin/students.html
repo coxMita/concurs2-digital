@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Elevi · {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+
+<section class="card mb-5" aria-labelledby="gen-title">
+  <div class="card__head">
+    <div>
+      <h2 id="gen-title">Generează conturi</h2>
+      <p class="muted">Parolele sunt afișate o singură dată, imediat după generare, împreună cu fișierul Excel pentru tipărire.</p>
+    </div>
+  </div>
+  <form method="post" action="/admin/teste/{{ exam.id }}/elevi/genereaza">
+    <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+    <div class="form-grid">
+      <div class="field">
+        <label for="names">Nume elevi <span class="muted">(opțional, câte unul pe rând)</span></label>
+        <textarea class="textarea" id="names" name="names" rows="5" placeholder="Ana Popescu&#10;Ion Ionescu"></textarea>
+        <p class="hint">Pentru fiecare nume se creează un cont de forma <code>ana.popescu</code>.</p>
+      </div>
+      <div class="field">
+        <label for="count">Conturi fără nume</label>
+        <input class="input input--num" id="count" name="count" type="number" min="0" max="1000" value="{% if students.is_empty() %}30{% else %}0{% endif %}" inputmode="numeric">
+        <p class="hint">Conturi <code>elev001</code>, <code>elev002</code>… Elevul își introduce numele la prima autentificare.</p>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn btn--primary" type="submit">Generează conturile</button></div>
+  </form>
+</section>
+
+<div class="row row--between mb-4">
+  <h2 class="mb-0">Elevi <span class="muted">({{ students.len() }})</span></h2>
+  {% if !students.is_empty() %}
+  <form id="bulk" method="post" action="/admin/teste/{{ exam.id }}/elevi/sterge" data-confirm="Ștergeți conturile selectate, împreună cu lucrările lor?">
+    <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+    <button class="btn btn--danger btn--sm" type="submit">Șterge selectații</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if students.is_empty() %}
+<div class="card empty">
+  <div class="empty__icon" aria-hidden="true">👤</div>
+  <h3>Niciun cont încă</h3>
+  <p>Generați conturile elevilor folosind formularul de mai sus.</p>
+</div>
+{% else %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th class="check"><input type="checkbox" data-select-all="bulk" aria-label="Selectează toți"></th>
+        <th>Nume</th>
+        <th>Utilizator</th>
+        <th>Stare</th>
+        <th>Timp suplimentar</th>
+        <th class="actions">Acțiuni</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      {% let st = s.status() %}
+      <tr id="s-{{ s.id }}">
+        <td class="check"><input type="checkbox" name="ids" value="{{ s.id }}" form="bulk" aria-label="Selectează {{ s.username }}"></td>
+        <td>
+          <form class="row" method="post" action="/admin/teste/{{ exam.id }}/elevi/{{ s.id }}/nume">
+            <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+            <input class="input input--sm" name="full_name" value="{{ s.full_name.as_deref().unwrap_or("") }}" placeholder="(fără nume)" aria-label="Numele elevului {{ s.username }}" maxlength="120">
+            <button class="btn btn--ghost btn--sm" type="submit">Salvează</button>
+          </form>
+        </td>
+        <td><code>{{ s.username }}</code></td>
+        <td><span class="badge badge--{{ st.0 }}">{{ st.1 }}</span> <span class="muted small">{{ self.pct(s) }}</span></td>
+        <td>
+          <form class="row" method="post" action="/admin/teste/{{ exam.id }}/elevi/{{ s.id }}/timp">
+            <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+            <input class="input input--sm input--mini" name="extra_minutes" type="number" min="0" max="600" value="{{ s.extra_minutes }}" aria-label="Minute suplimentare pentru {{ s.username }}" inputmode="numeric">
+            <span class="muted small">min</span>
+            <button class="btn btn--ghost btn--sm" type="submit">Aplică</button>
+          </form>
+        </td>
+        <td class="actions">
+          <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/elevi/{{ s.id }}/parola" data-confirm="Generați o parolă nouă pentru {{ s.username }}? Parola veche nu va mai funcționa.">
+            <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+            <button class="btn btn--sm" type="submit">Resetează parola</button>
+          </form>
+          {% if s.started_at.is_some() %}
+          <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/elevi/{{ s.id }}/reluare" data-confirm="Ștergeți lucrarea lui {{ s.username }} pentru a-i permite să susțină din nou testul? Răspunsurile actuale se pierd.">
+            <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+            <button class="btn btn--danger btn--sm" type="submit">Permite reluarea</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

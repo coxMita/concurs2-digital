@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE students SET extra_minutes = $3 WHERE id = $1 AND exam_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ebae62eb2e9d0c4f9fec414b133a75c1b29773470571b340dce443733f54aa96"
+}
