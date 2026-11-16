@@ -1,0 +1,8 @@
+# Reverse proxy with automatic HTTPS.
+#   DOMAIN=localhost    -> Caddy's internal self-signed certificate (testing).
+#   DOMAIN=your.domain  -> Let's Encrypt certificate, obtained automatically
+#                          (DNS must point to this server; ports 80/443 open).
+{$DOMAIN:localhost} {
+	reverse_proxy app:8080
+	header -Server
+}

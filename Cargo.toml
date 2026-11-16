@@ -8,7 +8,7 @@ publish = false
 axum = { version = "0.8", features = ["multipart", "macros"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.7", features = ["fs", "compression-br", "compression-gzip", "set-header", "trace", "limit", "timeout"] }
+tower-http = { version = "0.7", features = ["fs", "compression-br", "compression-gzip", "set-header", "trace", "limit", "catch-panic"] }
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "uuid", "chrono", "macros", "migrate", "derive", "sqlx-toml"] }
 askama = "0.16"
 tower-sessions = { version = "0.15", default-features = false, features = ["axum-core", "signed"] }

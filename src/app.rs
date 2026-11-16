@@ -15,8 +15,8 @@ use tower_governor::{
     GovernorLayer, governor::GovernorConfigBuilder, key_extractor::SmartIpKeyExtractor,
 };
 use tower_http::{
-    compression::CompressionLayer, limit::RequestBodyLimitLayer, services::ServeDir,
-    set_header::SetResponseHeaderLayer, trace::TraceLayer,
+    catch_panic::CatchPanicLayer, compression::CompressionLayer, limit::RequestBodyLimitLayer,
+    services::ServeDir, set_header::SetResponseHeaderLayer, trace::TraceLayer,
 };
 use tower_sessions::{Expiry, SessionManagerLayer, cookie::Key, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
@@ -114,6 +114,12 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
             HeaderValue::from_static("no-store"),
         ));
 
+    let hsts = if state.config.hsts() {
+        HeaderValue::from_static("max-age=31536000")
+    } else {
+        HeaderValue::from_static("max-age=0")
+    };
+
     Router::new()
         .merge(static_files)
         .merge(uploads)
@@ -122,7 +128,11 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())
-                .layer(RequestBodyLimitLayer::new(body_limit))
+                .layer(CatchPanicLayer::custom(|_| {
+                    AppError::Internal("handler panicked".into()).into_response()
+                }))
+                // Hard cap; the friendlier per-extractor limit is DefaultBodyLimit above.
+                .layer(RequestBodyLimitLayer::new(body_limit * 2))
                 .layer(CompressionLayer::new())
                 .layer(SetResponseHeaderLayer::if_not_present(
                     header::CONTENT_SECURITY_POLICY,
@@ -139,6 +149,10 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
                 .layer(SetResponseHeaderLayer::overriding(
                     header::REFERRER_POLICY,
                     HeaderValue::from_static("same-origin"),
+                ))
+                .layer(SetResponseHeaderLayer::overriding(
+                    header::STRICT_TRANSPORT_SECURITY,
+                    hsts,
                 ))
                 .layer(SetResponseHeaderLayer::overriding(
                     HeaderName::from_static("permissions-policy"),

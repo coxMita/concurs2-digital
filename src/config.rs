@@ -35,6 +35,12 @@ fn var<T: FromStr>(name: &str, default: T) -> T {
 }
 
 impl Config {
+    /// HSTS only for real domains (not localhost or a bare IP).
+    pub fn hsts(&self) -> bool {
+        let host = self.domain.split(':').next().unwrap_or_default();
+        self.cookie_secure && host != "localhost" && host.parse::<std::net::IpAddr>().is_err()
+    }
+
     pub fn from_env() -> Self {
         let database_url = env::var("DATABASE_URL")
             .unwrap_or_else(|_| "postgres://concurs:concurs@localhost:5432/concurs".into());

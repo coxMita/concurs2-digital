@@ -177,7 +177,13 @@ struct RawOption {
 }
 
 async fn parse_question_form(mut mp: Multipart) -> AppResult<(QuestionSubmission, Option<String>)> {
-    let bad = |_| AppError::BadRequest("Formular invalid.".into());
+    let bad = |e: axum::extract::multipart::MultipartError| {
+        if e.status() == StatusCode::PAYLOAD_TOO_LARGE {
+            AppError::BadRequest("Fișierul încărcat este prea mare.".into())
+        } else {
+            AppError::BadRequest("Formular invalid.".into())
+        }
+    };
     let mut text = String::new();
     let mut points_raw = String::from("1");
     let mut answer_type = AnswerType::Single;

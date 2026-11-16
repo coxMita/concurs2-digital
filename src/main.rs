@@ -9,6 +9,9 @@ use tracing_subscriber::EnvFilter;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv();
+    if std::env::args().nth(1).as_deref() == Some("healthcheck") {
+        std::process::exit(healthcheck());
+    }
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
@@ -71,6 +74,26 @@ async fn connect_with_retry(config: &Config) -> Result<sqlx::PgPool, sqlx::Error
             }
             Err(e) => return Err(e),
         }
+    }
+}
+
+/// `concurs healthcheck`: used by the Docker healthcheck (no curl in the image).
+fn healthcheck() -> i32 {
+    use std::io::{Read, Write};
+    let port = Config::from_env().bind_addr.port();
+    let Ok(mut s) = std::net::TcpStream::connect(("127.0.0.1", port)) else {
+        return 1;
+    };
+    let _ = s.set_read_timeout(Some(std::time::Duration::from_secs(3)));
+    if s.write_all(b"GET /healthz HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+        .is_err()
+    {
+        return 1;
+    }
+    let mut buf = [0u8; 64];
+    match s.read(&mut buf) {
+        Ok(n) if buf[..n].starts_with(b"HTTP/1.1 200") => 0,
+        _ => 1,
     }
 }
 

@@ -1,3 +1,4 @@
+name: concurs-dev
 # Local development only: Postgres published on 127.0.0.1:5432.
 # Usage: docker compose -f docker-compose.dev.yml up -d
 services:
