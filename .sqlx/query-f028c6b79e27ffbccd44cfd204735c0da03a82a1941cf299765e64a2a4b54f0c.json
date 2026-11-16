@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT x.attempt_id, x.question_id, x.option_id FROM answer_selections x\n         JOIN attempts a ON a.id = x.attempt_id WHERE a.exam_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "attempt_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "answer_selections",
+            "name": "attempt_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "question_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "answer_selections",
+            "name": "question_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "option_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "answer_selections",
+            "name": "option_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f028c6b79e27ffbccd44cfd204735c0da03a82a1941cf299765e64a2a4b54f0c"
+}

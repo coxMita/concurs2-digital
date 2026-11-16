@@ -1,0 +1,33 @@
+<div class="stats">
+  <div class="stat"><div class="stat__label">Terminat</div><div class="stat__value">{{ counters.finished }} <small>/ {{ counters.total }}</small></div></div>
+  <div class="stat"><div class="stat__label">În desfășurare</div><div class="stat__value">{{ counters.in_progress }}</div></div>
+  <div class="stat"><div class="stat__label">Neînceput</div><div class="stat__value">{{ counters.not_started }}</div></div>
+  <div class="stat"><div class="stat__label">Media notelor</div><div class="stat__value">{{ counters.average }}</div></div>
+</div>
+<div class="row row--between mb-4">
+  <p class="muted small mb-0">Testul este <strong>{{ exam.status.label().to_lowercase() }}</strong> · {{ questions }} întrebări · actualizat la {{ updated }} (la fiecare 5 secunde)</p>
+  <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/rezultate.xlsx">Exportă Excel</a>
+</div>
+{% if rows.is_empty() %}
+<div class="card empty"><h3>Niciun elev</h3><p>Generați conturile din secțiunea „Elevi”.</p></div>
+{% else %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Elev</th><th>Stare</th><th class="num">Răspunsuri</th><th class="num">Timp rămas</th><th class="num">Nota</th><th>Observații</th></tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td><strong>{% if r.name.is_empty() %}<span class="muted">(fără nume)</span>{% else %}{{ r.name }}{% endif %}</strong><br><code class="small muted">{{ r.username }}</code></td>
+        <td><span class="badge badge--{{ r.status_class }}">{{ r.status }}</span></td>
+        <td class="num">{{ r.answered }} / {{ questions }}</td>
+        <td class="num">{{ r.time_left }}</td>
+        <td class="num"><strong>{{ r.score }}</strong></td>
+        <td>{% if r.relogins > 0 %}<span class="badge badge--warn" title="Elevul s-a autentificat din nou în timpul testului">Reconectat {{ r.relogins }}×</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}

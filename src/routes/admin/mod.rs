@@ -3,6 +3,7 @@
 pub mod account;
 pub mod exams;
 pub mod questions;
+pub mod results;
 pub mod students;
 
 use axum::{
@@ -73,4 +74,11 @@ pub fn router() -> Router<AppState> {
         )
         .route("/teste/{id}/elevi/{sid}/timp", post(students::extra_time))
         .route("/teste/{id}/elevi/{sid}/reluare", post(students::retake))
+        .route("/teste/{id}/live", get(results::live))
+        .route("/teste/{id}/live/tabel", get(results::live_table))
+        .route("/teste/{id}/rezultate", get(results::results_page))
+        .route(
+            "/teste/{id}/rezultate.xlsx",
+            get(results::results_xlsx_download),
+        )
 }

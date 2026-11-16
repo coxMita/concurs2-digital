@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Monitorizare · {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+<div id="live" hx-get="/admin/teste/{{ exam.id }}/live/tabel" hx-trigger="load, every 5s" hx-swap="innerHTML">
+  <p class="muted">Se încarcă…</p>
+</div>
+{% endblock %}

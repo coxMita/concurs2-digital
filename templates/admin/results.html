@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Rezultate · {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+<div class="stats">
+  <div class="stat"><div class="stat__label">Lucrări trimise</div><div class="stat__value">{{ submitted }} <small>/ {{ total }}</small></div></div>
+  <div class="stat"><div class="stat__label">Media notelor</div><div class="stat__value">{{ average }}</div></div>
+</div>
+<div class="card mb-5">
+  <div class="card__head">
+    <div>
+      <h2>Export Excel</h2>
+      <p class="muted">Foile „Rezultate” (câte o coloană pe întrebare, colorată Corect/Greșit/Fără răspuns), „Întrebări” și „Statistici”. Disponibil oricând, inclusiv în timpul testului.</p>
+    </div>
+  </div>
+  <a class="btn btn--primary" href="/admin/teste/{{ exam.id }}/rezultate.xlsx">Descarcă rezultatele (.xlsx)</a>
+</div>
+
+<h2>Statistici pe întrebări</h2>
+{% if stats.is_empty() %}
+<p class="muted">Testul nu are întrebări.</p>
+{% else %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Nr.</th><th>Întrebare</th><th class="num">Corecte</th><th class="num">Greșite</th><th class="num">Fără răspuns</th><th>Corect (%)</th></tr></thead>
+    <tbody>
+      {% for s in stats %}
+      <tr>
+        <td>Î{{ s.n }}</td>
+        <td class="cell-text">{{ s.text }}</td>
+        <td class="num cell-ok">{{ s.correct }}</td>
+        <td class="num cell-bad">{{ s.wrong }}</td>
+        <td class="num">{{ s.unanswered }}</td>
+        <td><div class="row nowrap"><meter class="meter" min="0" max="100" low="40" high="70" optimum="100" value="{{ s.pct }}">{{ s.pct }}%</meter><span class="small">{{ s.pct }}%</span></div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

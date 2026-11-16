@@ -573,3 +573,5 @@ dialog.modal[open] { animation: modal-in var(--t-slow); }
 .score-ring__track { stroke: rgba(125, 150, 163, 0.2); }
 .score-ring__bar { stroke: var(--c-primary); transition: stroke-dasharray var(--t-slow); }
 .score-ring__text { font-size: 30px; font-weight: 800; fill: var(--c-text-strong); letter-spacing: -0.03em; font-family: var(--font); }
+.cell-text { max-width: 480px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.meter { width: 120px; height: 8px; }

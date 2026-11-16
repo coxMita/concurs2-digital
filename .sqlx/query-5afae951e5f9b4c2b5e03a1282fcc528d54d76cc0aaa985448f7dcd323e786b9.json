@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.full_name, s.username, a.id AS \"attempt_id?\", a.started_at AS \"started_at?\",\n                  a.submitted_at, a.earned_points, a.max_points AS \"max_points?\", a.percentage\n           FROM students s LEFT JOIN attempts a ON a.student_id = s.id\n           WHERE s.exam_id = $1\n           ORDER BY COALESCE(s.full_name, s.username), s.username",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "full_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "full_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "attempt_id?",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "started_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "started_at"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "submitted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "submitted_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "earned_points",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "earned_points"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "max_points?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "max_points"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "percentage",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "percentage"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "5afae951e5f9b4c2b5e03a1282fcc528d54d76cc0aaa985448f7dcd323e786b9"
+}
