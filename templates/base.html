@@ -12,6 +12,8 @@
   <link rel="icon" href="/static/img/icon.svg" type="image/svg+xml">
   <script src="/static/js/htmx.min.js?v={{ ctx.v }}" defer></script>
   <script src="/static/js/app.js?v={{ ctx.v }}" defer></script>
+  {% if ctx.area == "admin" %}<script src="/static/js/admin.js?v={{ ctx.v }}" defer></script>{% endif %}
+  {% if !ctx.csrf.is_empty() %}<meta name="csrf-token" content="{{ ctx.csrf }}">{% endif %}
   {% block head %}{% endblock %}
 </head>
 <body{% if !ctx.csrf.is_empty() %} hx-headers='{"X-CSRF-Token": "{{ ctx.csrf }}"}'{% endif %}>

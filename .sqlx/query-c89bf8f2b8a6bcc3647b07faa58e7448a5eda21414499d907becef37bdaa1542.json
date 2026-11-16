@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO exams (title, description, duration_minutes, result_visibility)\n         SELECT title || ' (copie)', description, duration_minutes, result_visibility\n         FROM exams WHERE id = $1 RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "exams",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c89bf8f2b8a6bcc3647b07faa58e7448a5eda21414499d907becef37bdaa1542"
+}

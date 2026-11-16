@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE questions SET text = $3, points = $4, answer_type = $5\n                 WHERE id = $1 AND exam_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Int4",
+        {
+          "Custom": {
+            "name": "answer_type",
+            "kind": {
+              "Enum": [
+                "single",
+                "multiple"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "418dd22fdd868da1b4fdfc77dc779492dcb53c36c358681f4fb79fd009384473"
+}

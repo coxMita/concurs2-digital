@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE questions SET position = position + 1 WHERE exam_id = $1 AND position > $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d7124ce6042c51323bfcd86ed6a5d541770d5616bb2f03605fe2d85f4730a5e0"
+}

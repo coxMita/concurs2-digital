@@ -4,6 +4,7 @@ use std::{sync::Arc, time::Duration};
 
 use axum::{
     Router,
+    extract::DefaultBodyLimit,
     http::{HeaderName, HeaderValue, header},
     middleware,
     response::IntoResponse,
@@ -63,16 +64,7 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
         .route("/admin/login", post(routes::auth::admin_login))
         .layer(login_limit);
 
-    let admin_routes = Router::new()
-        .route("/", get(admin::home))
-        .route("/cont", get(admin::account::show))
-        .route("/cont/parola", post(admin::account::change_password))
-        .route("/cont/admini", post(admin::account::add_admin))
-        .route(
-            "/cont/admini/{id}/sterge",
-            post(admin::account::delete_admin),
-        )
-        .route("/teste", get(admin::exams::list));
+    let admin_routes = admin::router();
 
     let static_files = Router::new()
         .nest_service("/static", ServeDir::new(&state.config.static_dir))
@@ -101,6 +93,7 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
         .nest("/admin", admin_routes)
         .fallback(|| async { AppError::NotFound })
         .layer(middleware::from_fn(csrf::verify))
+        .layer(DefaultBodyLimit::max(body_limit))
         .layer(sessions)
         .layer(SetResponseHeaderLayer::if_not_present(
             header::CACHE_CONTROL,

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH src AS (\n               SELECT id, position, text, image_path, points, answer_type,\n                      gen_random_uuid() AS new_id\n               FROM questions WHERE exam_id = $1\n           ), ins_q AS (\n               INSERT INTO questions (id, exam_id, position, text, image_path, points, answer_type)\n               SELECT s.new_id, $2, s.position, s.text,\n                      (SELECT m.new FROM unnest($3::text[], $4::text[]) AS m(old, new)\n                        WHERE m.old = s.image_path),\n                      s.points, s.answer_type\n               FROM src s\n               RETURNING id\n           )\n           INSERT INTO options (question_id, position, text, is_correct)\n           SELECT s.new_id, o.position, o.text, o.is_correct\n           FROM src s JOIN options o ON o.question_id = s.id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4d0d945f28abcd1097f2efd586389adb363a13577f05493e4bc523f5a53f800e"
+}

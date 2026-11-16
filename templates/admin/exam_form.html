@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{% if let Some(exam) = exam %}{{ exam.title }}{% else %}Test nou{% endif %}{% endblock %}
+{% block content %}
+{% if let Some(exam) = exam %}
+{% include "admin/_exam_head.html" %}
+{% else %}
+<div class="page-head">
+  <div>
+    <a class="eyebrow" href="/admin/teste">← Teste</a>
+    <h1>Test nou</h1>
+  </div>
+</div>
+{% endif %}
+
+{% if let Some(e) = error %}<div class="alert alert--error" role="alert"><p>{{ e }}</p></div>{% endif %}
+
+<div class="grid grid--2">
+  <section class="card" aria-labelledby="settings-title">
+    <h2 id="settings-title">Detalii</h2>
+    <form method="post" action="{% if let Some(exam) = exam %}/admin/teste/{{ exam.id }}{% else %}/admin/teste/nou{% endif %}">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <div class="field">
+        <label for="title">Titlu</label>
+        <input class="input" id="title" name="title" value="{{ title }}" required maxlength="200">
+      </div>
+      <div class="field">
+        <label for="description">Instrucțiuni pentru elevi <span class="muted">(opțional)</span></label>
+        <textarea class="textarea" id="description" name="description" rows="4">{{ description }}</textarea>
+        <p class="hint">Sunt afișate elevilor înainte de începerea testului.</p>
+      </div>
+      <div class="field">
+        <label for="duration">Durată (minute)</label>
+        <input class="input input--num" id="duration" name="duration_minutes" type="number" min="1" max="1440" value="{{ duration }}" required inputmode="numeric">
+      </div>
+      <div class="field">
+        <span class="label" id="vis-label">Ce vede elevul după trimitere</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="vis-label">
+          <input type="radio" id="vis-none" name="result_visibility" value="none"{% if visibility == "none" %} checked{% endif %}><label for="vis-none">Nimic</label>
+          <input type="radio" id="vis-score" name="result_visibility" value="score"{% if visibility == "score" %} checked{% endif %}><label for="vis-score">Doar nota</label>
+          <input type="radio" id="vis-all" name="result_visibility" value="score_and_answers"{% if visibility == "score_and_answers" %} checked{% endif %}><label for="vis-all">Nota + răspunsuri</label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn--primary" type="submit">{% if exam.is_some() %}Salvează{% else %}Creează testul{% endif %}</button>
+      </div>
+    </form>
+  </section>
+
+  {% if let Some(exam) = exam %}
+  <div class="stack">
+    <section class="card" aria-labelledby="status-title">
+      <h2 id="status-title">Stare</h2>
+      <p class="muted">Elevii pot susține testul doar cât timp este <strong>deschis</strong>. La închidere, toate lucrările în desfășurare sunt finalizate automat.</p>
+      <form method="post" action="/admin/teste/{{ exam.id }}/stare" data-confirm="Schimbați starea testului?">
+        <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+        <div class="segmented" role="radiogroup" aria-label="Stare test">
+          <input type="radio" id="st-draft" name="status" value="draft"{% if exam.status.as_str() == "draft" %} checked{% endif %}><label for="st-draft">Ciornă</label>
+          <input type="radio" id="st-open" name="status" value="open"{% if exam.status.as_str() == "open" %} checked{% endif %}><label for="st-open">Deschis</label>
+          <input type="radio" id="st-closed" name="status" value="closed"{% if exam.status.as_str() == "closed" %} checked{% endif %}><label for="st-closed">Închis</label>
+        </div>
+        <div class="form-actions"><button class="btn btn--primary" type="submit">Aplică starea</button></div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="tools-title">
+      <h2 id="tools-title">Acțiuni</h2>
+      <div class="row">
+        <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/duplica">
+          <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+          <button class="btn" type="submit">Duplică testul</button>
+        </form>
+        {% if locked %}
+        <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/recalculeaza" data-confirm="Recalculați notele tuturor lucrărilor trimise, pe baza răspunsurilor corecte actuale?">
+          <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+          <button class="btn" type="submit">Recalculează notele</button>
+        </form>
+        {% endif %}
+        <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/sterge" data-confirm="Ștergeți definitiv testul „{{ exam.title }}”, cu toate întrebările, conturile elevilor și rezultatele?">
+          <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+          <button class="btn btn--danger" type="submit">Șterge testul</button>
+        </form>
+      </div>
+    </section>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

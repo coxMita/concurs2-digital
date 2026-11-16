@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{% if question_id.is_some() %}Editează întrebarea{% else %}Întrebare nouă{% endif %}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+
+<div class="main--narrow">
+  <h2>{% if question_id.is_some() %}Întrebarea {{ number }}{% else %}Întrebare nouă{% endif %}</h2>
+  {% if let Some(e) = error %}<div class="alert alert--error" role="alert"><p>{{ e }}</p></div>{% endif %}
+  {% if locked %}<div class="alert alert--warn" role="note"><p>{{ locked_msg }}</p></div>{% endif %}
+
+  <form class="card" method="post" enctype="multipart/form-data"
+        action="{% if let Some(qid) = question_id %}/admin/teste/{{ exam.id }}/intrebari/{{ qid }}{% else %}/admin/teste/{{ exam.id }}/intrebari/noua{% endif %}?_csrf={{ ctx.csrf }}">
+    <div class="field">
+      <label for="text">Textul întrebării</label>
+      <textarea class="textarea" id="text" name="text" rows="4" required>{{ text }}</textarea>
+    </div>
+
+    <div class="field">
+      <label for="image">Imagine <span class="muted">(opțional: PNG, JPG sau WebP, max. {{ max_mb }} MB)</span></label>
+      {% if let Some(img) = image %}
+      <img class="q-image" src="/uploads/{{ img }}" alt="Imaginea curentă a întrebării">
+      <label class="switch"><input type="checkbox" name="remove_image" value="1"><span class="switch__track" aria-hidden="true"></span>Elimină imaginea</label>
+      {% endif %}
+      <input class="input" id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp">
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <span class="label" id="type-label">Tip răspuns</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="type-label" data-answer-type>
+          <input type="radio" id="t-single" name="answer_type" value="single"{% if answer_type == "single" %} checked{% endif %}><label for="t-single">Un singur răspuns corect</label>
+          <input type="radio" id="t-multiple" name="answer_type" value="multiple"{% if answer_type == "multiple" %} checked{% endif %}><label for="t-multiple">Mai multe răspunsuri corecte</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="points">Punctaj</label>
+        <input class="input input--num" id="points" name="points" type="number" min="0" max="1000" value="{{ points }}" required inputmode="numeric">
+      </div>
+    </div>
+
+    <fieldset class="field fieldset">
+      <legend class="label mb-4">Variante de răspuns <span class="muted">(2–8; marcați varianta/variantele corecte)</span></legend>
+      <div class="opt-rows" data-options data-locked="{{ locked }}">
+        {% for o in options %}
+        <div class="opt-row" data-option-row>
+          <input type="hidden" name="opt_id_{{ loop.index0 }}" value="{{ o.id }}">
+          <input class="input" name="opt_text_{{ loop.index0 }}" value="{{ o.text }}" aria-label="Varianta {{ loop.index }}" placeholder="Varianta {{ loop.index }}" maxlength="2000">
+          <label class="switch"><input type="checkbox" name="opt_correct_{{ loop.index0 }}" value="1"{% if o.correct %} checked{% endif %}><span class="switch__track" aria-hidden="true"></span>Corect</label>
+          {% if !locked %}<button class="btn btn--ghost btn--icon opt-row__remove" type="button" data-remove-option aria-label="Elimină varianta {{ loop.index }}">✕</button>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% if !locked %}<button class="btn btn--sm" type="button" data-add-option>+ Adaugă variantă</button>{% endif %}
+      <template data-option-template>
+        <div class="opt-row" data-option-row>
+          <input type="hidden" name="opt_id___I__" value="">
+          <input class="input" name="opt_text___I__" value="" aria-label="Variantă nouă" placeholder="Variantă nouă" maxlength="2000">
+          <label class="switch"><input type="checkbox" name="opt_correct___I__" value="1"><span class="switch__track" aria-hidden="true"></span>Corect</label>
+          <button class="btn btn--ghost btn--icon opt-row__remove" type="button" data-remove-option aria-label="Elimină varianta">✕</button>
+        </div>
+      </template>
+    </fieldset>
+
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">Salvează</button>
+      <a class="btn btn--ghost" href="/admin/teste/{{ exam.id }}/intrebari">Renunță</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

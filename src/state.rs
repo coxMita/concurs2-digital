@@ -2,7 +2,11 @@ use std::{ops::Deref, sync::Arc};
 
 use sqlx::PgPool;
 
-use crate::{auth::ratelimit::LoginLimiter, config::Config, services::hashing::Hasher};
+use crate::{
+    auth::ratelimit::LoginLimiter,
+    config::Config,
+    services::{exam_cache::ExamCache, hashing::Hasher},
+};
 
 #[derive(Clone)]
 pub struct AppState(Arc<Inner>);
@@ -12,6 +16,7 @@ pub struct Inner {
     pub config: Config,
     pub hasher: Hasher,
     pub login_limiter: LoginLimiter,
+    pub cache: ExamCache,
 }
 
 impl AppState {
@@ -23,6 +28,7 @@ impl AppState {
             config,
             hasher,
             login_limiter,
+            cache: ExamCache::new(),
         }))
     }
 }

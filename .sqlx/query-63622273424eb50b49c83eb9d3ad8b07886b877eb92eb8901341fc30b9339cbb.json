@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT o.id, o.question_id, o.text, o.is_correct\n           FROM options o JOIN questions q ON q.id = o.question_id\n           WHERE q.exam_id = $1 ORDER BY o.question_id, o.position, o.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "options",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "question_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "options",
+            "name": "question_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "text",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "options",
+            "name": "text"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "is_correct",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "options",
+            "name": "is_correct"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "63622273424eb50b49c83eb9d3ad8b07886b877eb92eb8901341fc30b9339cbb"
+}

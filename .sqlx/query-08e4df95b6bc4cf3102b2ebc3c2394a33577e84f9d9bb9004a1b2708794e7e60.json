@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT o.id FROM options o JOIN questions q ON q.id = o.question_id\n         WHERE o.question_id = $1 AND q.exam_id = $2 FOR UPDATE OF o",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "options",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "08e4df95b6bc4cf3102b2ebc3c2394a33577e84f9d9bb9004a1b2708794e7e60"
+}

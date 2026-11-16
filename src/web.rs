@@ -127,3 +127,14 @@ pub fn compute_asset_version(dir: &std::path::Path) -> String {
     walk(dir, &mut h);
     format!("{:x}", h.finish() & 0xffff_ffff)
 }
+
+/// ASCII file-name-safe slug ("Test de română" -> "test-de-romana").
+pub fn slug(s: &str) -> String {
+    let base = crate::services::credentials::username_base_from_name(s).unwrap_or_default();
+    let slug: String = base
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect();
+    let slug = slug.trim_matches('-').to_string();
+    if slug.is_empty() { "test".into() } else { slug }
+}

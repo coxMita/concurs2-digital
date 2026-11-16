@@ -46,3 +46,14 @@ impl FromRequestParts<AppState> for CurrentAdmin {
         }
     }
 }
+
+impl CurrentAdmin {
+    /// Page context for admin pages.
+    pub async fn ctx(&self, nav: &'static str) -> Result<crate::web::Ctx, AppError> {
+        crate::web::Ctx::build(&self.session, "admin", Some(self.username.clone()), nav).await
+    }
+
+    pub async fn flash(&self, kind: &str, message: impl Into<String>) -> Result<(), AppError> {
+        crate::web::set_flash(&self.session, kind, message).await
+    }
+}

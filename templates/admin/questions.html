@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Întrebări · {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+
+{% if locked %}<div class="alert alert--warn" role="note"><p>{{ locked_msg }}</p></div>{% endif %}
+
+<div class="row row--between mb-5">
+  <p class="muted mb-0">{{ questions.len() }} întrebări · {{ total_points }} puncte în total</p>
+  <div class="row">
+    <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/export-intrebari">Exportă</a>
+    {% if !locked %}
+    <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/import">Import în masă</a>
+    <a class="btn btn--primary btn--sm" href="/admin/teste/{{ exam.id }}/intrebari/noua">+ Întrebare</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if questions.is_empty() %}
+<div class="card empty">
+  <div class="empty__icon" aria-hidden="true">?</div>
+  <h3>Nicio întrebare</h3>
+  <p>Adăugați întrebările una câte una sau importați-le dintr-un text.</p>
+  <div class="row row--center">
+    <a class="btn btn--primary" href="/admin/teste/{{ exam.id }}/intrebari/noua">Adaugă o întrebare</a>
+    <a class="btn" href="/admin/teste/{{ exam.id }}/import">Import în masă</a>
+  </div>
+</div>
+{% else %}
+<p class="muted small">Trageți de <span aria-hidden="true">⋮⋮</span> pentru a schimba ordinea (sau folosiți săgețile).</p>
+<ol class="qlist" data-reorder-url="/admin/teste/{{ exam.id }}/intrebari/ordine">
+  {% for q in questions %}
+  <li class="qitem" id="q-{{ q.id }}" data-id="{{ q.id }}">
+    <button class="qitem__handle" type="button" draggable="true" aria-label="Mută întrebarea {{ loop.index }}" title="Trage pentru a muta">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6" fill="currentColor"/><circle cx="15" cy="6" r="1.6" fill="currentColor"/><circle cx="9" cy="12" r="1.6" fill="currentColor"/><circle cx="15" cy="12" r="1.6" fill="currentColor"/><circle cx="9" cy="18" r="1.6" fill="currentColor"/><circle cx="15" cy="18" r="1.6" fill="currentColor"/></svg>
+    </button>
+    <span class="qitem__num">{{ loop.index }}</span>
+    <div class="qitem__body">
+      <p class="qitem__text">{{ q.text }}</p>
+      {% if let Some(img) = q.image_path %}<img class="q-image q-image--thumb" src="/uploads/{{ img }}" alt="Imagine întrebare {{ loop.index }}" loading="lazy">{% endif %}
+      <ul class="qitem__opts">
+        {% for o in q.options %}<li{% if o.is_correct %} class="is-correct"{% endif %}>{% if o.is_correct %}✓{% else %}·{% endif %} {{ o.text }}</li>{% endfor %}
+      </ul>
+      <div class="qitem__meta mt-4">
+        <span class="badge badge--plain">{{ q.answer_type.short_label() }}</span>
+        <span class="badge badge--plain">{{ q.points }} {% if q.points == 1 %}punct{% else %}puncte{% endif %}</span>
+      </div>
+    </div>
+    <div class="qitem__actions">
+      <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/intrebari/{{ q.id }}/sus"><input type="hidden" name="_csrf" value="{{ ctx.csrf }}"><button class="btn btn--ghost btn--icon" type="submit" aria-label="Mută în sus"{% if loop.first %} disabled{% endif %}>↑</button></form>
+      <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/intrebari/{{ q.id }}/jos"><input type="hidden" name="_csrf" value="{{ ctx.csrf }}"><button class="btn btn--ghost btn--icon" type="submit" aria-label="Mută în jos"{% if loop.last %} disabled{% endif %}>↓</button></form>
+      <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/intrebari/{{ q.id }}">Editează</a>
+      {% if !locked %}
+      <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/intrebari/{{ q.id }}/duplica"><input type="hidden" name="_csrf" value="{{ ctx.csrf }}"><button class="btn btn--sm" type="submit">Duplică</button></form>
+      <form class="inline-form" method="post" action="/admin/teste/{{ exam.id }}/intrebari/{{ q.id }}/sterge" data-confirm="Ștergeți întrebarea {{ loop.index }}?"><input type="hidden" name="_csrf" value="{{ ctx.csrf }}"><button class="btn btn--danger btn--sm" type="submit">Șterge</button></form>
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+{% endblock %}

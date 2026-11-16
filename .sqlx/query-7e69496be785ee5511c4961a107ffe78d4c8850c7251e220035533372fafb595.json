@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT attempt_id, question_id FROM attempt_questions WHERE attempt_id = ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "attempt_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "attempt_questions",
+            "name": "attempt_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "question_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "attempt_questions",
+            "name": "question_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "7e69496be785ee5511c4961a107ffe78d4c8850c7251e220035533372fafb595"
+}

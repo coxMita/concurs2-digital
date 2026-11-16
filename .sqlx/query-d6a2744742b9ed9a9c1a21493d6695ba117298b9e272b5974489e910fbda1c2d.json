@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE questions SET image_path = $3 WHERE id = $1 AND exam_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d6a2744742b9ed9a9c1a21493d6695ba117298b9e272b5974489e910fbda1c2d"
+}

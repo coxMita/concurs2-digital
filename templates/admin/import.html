@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Import întrebări · {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+
+{% if locked %}<div class="alert alert--warn" role="note"><p>{{ locked_msg }}</p></div>{% endif %}
+
+<div class="grid grid--2">
+  <section class="card">
+    <h2>Import în masă</h2>
+    <p class="muted">Lipiți întrebările în formatul de mai jos, apoi verificați previzualizarea înainte de salvare.</p>
+    {% if !errors.is_empty() %}
+    <div class="alert alert--error" role="alert">
+      <div>
+        <p><strong>Textul conține erori:</strong></p>
+        <ul class="mb-0">{% for e in errors %}<li>Linia {{ e.line }}: {{ e.message }}</li>{% endfor %}</ul>
+      </div>
+    </div>
+    {% endif %}
+    <form method="post" action="/admin/teste/{{ exam.id }}/import">
+      <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
+      <div class="field">
+        <label for="text">Întrebări</label>
+        <textarea class="textarea textarea--code" id="text" name="text" required spellcheck="false" placeholder="{{ example }}">{{ text }}</textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit" name="action" value="preview">Previzualizează</button>
+        {% if !preview.is_empty() && !locked %}
+        <button class="btn btn--primary" type="submit" name="action" value="save">Salvează {{ preview.len() }} întrebări</button>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+
+  <section class="card card--flat">
+    <h2>Format</h2>
+    <ul>
+      <li><code>Î:</code> începe o întrebare; rândurile următoare continuă textul.</li>
+      <li><code>P:</code> punctaj (opțional, implicit 1).</li>
+      <li><code>T:</code> <code>simplu</code> sau <code>multiplu</code> (opțional; dedus din numărul de variante corecte).</li>
+      <li><code>+ text</code> variantă corectă, <code>- text</code> variantă greșită (2–8 variante).</li>
+      <li>Rândurile care încep cu <code>#</code> sunt ignorate. Un rând de text care începe cu <code>\</code> este preluat ca atare.</li>
+      <li>Imaginile nu sunt incluse: adăugați-le după import, din editorul întrebării.</li>
+    </ul>
+    <h3>Exemplu</h3>
+    <pre>{{ example }}</pre>
+  </section>
+</div>
+
+{% if !preview.is_empty() %}
+<section class="mt-6">
+  <h2>Previzualizare ({{ preview.len() }} întrebări)</h2>
+  <ol class="qlist">
+    {% for q in preview %}
+    <li class="qitem">
+      <span class="qitem__num">{{ loop.index }}</span>
+      <div class="qitem__body">
+        <p class="qitem__text">{{ q.text }}</p>
+        <ul class="qitem__opts">
+          {% for o in q.options %}<li{% if o.correct %} class="is-correct"{% endif %}>{% if o.correct %}✓{% else %}·{% endif %} {{ o.text }}</li>{% endfor %}
+        </ul>
+        <div class="qitem__meta mt-4">
+          <span class="badge badge--plain">{{ q.type_label }}</span>
+          <span class="badge badge--plain">{{ q.points }} p</span>
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}
+{% endblock %}

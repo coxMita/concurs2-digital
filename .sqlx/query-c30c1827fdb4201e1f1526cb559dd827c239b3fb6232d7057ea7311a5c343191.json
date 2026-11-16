@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO exams (title, description, duration_minutes, result_visibility)\n         VALUES ($1, $2, $3, $4) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "exams",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        {
+          "Custom": {
+            "name": "result_visibility",
+            "kind": {
+              "Enum": [
+                "none",
+                "score",
+                "score_and_answers"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c30c1827fdb4201e1f1526cb559dd827c239b3fb6232d7057ea7311a5c343191"
+}

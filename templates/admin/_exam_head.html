@@ -1,0 +1,17 @@
+<div class="page-head">
+  <div>
+    <a class="eyebrow" href="/admin/teste">← Teste</a>
+    <h1>{{ exam.title }}</h1>
+    <div class="row mt-4">
+      <span class="badge badge--{{ exam.status.as_str() }}">{{ exam.status.label() }}</span>
+      <span class="muted small">{{ exam.duration_minutes }} minute · Rezultate: {{ exam.result_visibility.label() }}</span>
+    </div>
+  </div>
+</div>
+<nav class="tabs" aria-label="Secțiuni test">
+  <a href="/admin/teste/{{ exam.id }}"{% if tab == "setari" %} aria-current="page"{% endif %}>Setări</a>
+  <a href="/admin/teste/{{ exam.id }}/intrebari"{% if tab == "intrebari" %} aria-current="page"{% endif %}>Întrebări</a>
+  <a href="/admin/teste/{{ exam.id }}/elevi"{% if tab == "elevi" %} aria-current="page"{% endif %}>Elevi</a>
+  <a href="/admin/teste/{{ exam.id }}/live"{% if tab == "live" %} aria-current="page"{% endif %}>Monitorizare</a>
+  <a href="/admin/teste/{{ exam.id }}/rezultate"{% if tab == "rezultate" %} aria-current="page"{% endif %}>Rezultate</a>
+</nav>

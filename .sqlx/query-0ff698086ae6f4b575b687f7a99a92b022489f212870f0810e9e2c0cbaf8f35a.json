@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE attempts a SET\n            earned_points = v.e, max_points = v.m, percentage = v.p,\n            submitted_at = CASE WHEN $5 THEN LEAST(now(), a.deadline) ELSE a.submitted_at END\n         FROM unnest($1::uuid[], $2::int[], $3::int[], $4::float8[]) AS v(id, e, m, p)\n         WHERE a.id = v.id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "Int4Array",
+        "Int4Array",
+        "Float8Array",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0ff698086ae6f4b575b687f7a99a92b022489f212870f0810e9e2c0cbaf8f35a"
+}

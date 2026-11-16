@@ -6,10 +6,33 @@
     <span class="eyebrow">Administrare</span>
     <h1>Teste</h1>
   </div>
+  <div class="page-head__actions">
+    <a class="btn btn--primary" href="/admin/teste/nou">+ Test nou</a>
+  </div>
 </div>
+{% if exams.is_empty() %}
 <div class="card empty">
   <div class="empty__icon" aria-hidden="true">✎</div>
   <h3>Niciun test încă</h3>
-  <p>Crearea testelor va fi disponibilă în curând.</p>
+  <p>Creați primul test, adăugați întrebările, apoi generați conturile elevilor.</p>
+  <a class="btn btn--primary" href="/admin/teste/nou">Creează un test</a>
 </div>
+{% else %}
+<div class="grid grid--3">
+  {% for s in exams %}
+  <a class="card card--tight exam-card" href="/admin/teste/{{ s.exam.id }}/intrebari">
+    <div class="row row--between">
+      <span class="badge badge--{{ s.exam.status.as_str() }}">{{ s.exam.status.label() }}</span>
+      <span class="muted small">{{ s.exam.duration_minutes }} min</span>
+    </div>
+    <h3>{{ s.exam.title }}</h3>
+    <div class="exam-card__meta">
+      <span>{{ s.questions }} întrebări</span>
+      <span>{{ s.students }} elevi</span>
+      <span>{{ s.submitted }} trimise</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

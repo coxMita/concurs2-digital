@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE exams SET status = $2, updated_at = now() WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "exam_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "open",
+                "closed"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3c2d0512fc02370835f5301c29e7e0ae902fd7d2820d6825c1b01bd98df0b500"
+}

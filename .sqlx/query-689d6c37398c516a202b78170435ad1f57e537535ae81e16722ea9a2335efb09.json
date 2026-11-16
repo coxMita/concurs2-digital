@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE questions q SET position = t.ord::int\n         FROM unnest($2::uuid[]) WITH ORDINALITY AS t(id, ord)\n         WHERE q.id = t.id AND q.exam_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "689d6c37398c516a202b78170435ad1f57e537535ae81e16722ea9a2335efb09"
+}

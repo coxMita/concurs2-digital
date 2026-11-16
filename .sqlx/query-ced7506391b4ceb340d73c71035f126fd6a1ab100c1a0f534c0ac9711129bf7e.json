@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO options (question_id, position, text, is_correct)\n         SELECT $1, t.ord::int, t.text, t.correct\n         FROM unnest($2::text[], $3::bool[]) WITH ORDINALITY AS t(text, correct, ord)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray",
+        "BoolArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ced7506391b4ceb340d73c71035f126fd6a1ab100c1a0f534c0ac9711129bf7e"
+}
