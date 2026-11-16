@@ -39,7 +39,7 @@ COPY static /app/static
 ENV BIND_ADDR=0.0.0.0:8080 \
     STATIC_DIR=/app/static \
     UPLOAD_DIR=/data/uploads \
-    RUST_LOG=info \
+    RUST_LOG=info,sqlx=warn,tower_http=warn \
     MALLOC_MMAP_THRESHOLD_=131072 \
     MALLOC_ARENA_MAX=2
 USER app

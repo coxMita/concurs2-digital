@@ -53,8 +53,8 @@
   <div class="question-foot mt-5">
     <a class="btn btn--ghost" href="/test/finalizeaza">Finalizează</a>
     <div class="question-foot__nav">
-      {% if let Some(p) = prev %}<a class="btn" href="/test?q={{ p }}" rel="prev">← Înapoi</a>{% else %}<span class="btn" aria-disabled="true">← Înapoi</span>{% endif %}
-      {% if let Some(n) = next %}<a class="btn btn--primary" href="/test?q={{ n }}" rel="next">Următoarea →</a>{% else %}<a class="btn btn--primary" href="/test/finalizeaza">Finalizează →</a>{% endif %}
+      {% if let Some(p) = prev %}<a class="btn" href="/test?q={{ p }}" rel="prev">Înapoi</a>{% else %}<span class="btn" aria-disabled="true">Înapoi</span>{% endif %}
+      {% if let Some(n) = next %}<a class="btn btn--primary" href="/test?q={{ n }}" rel="next">Următoarea</a>{% else %}<a class="btn btn--primary" href="/test/finalizeaza">Finalizează</a>{% endif %}
     </div>
   </div>
 </article>

@@ -10,6 +10,7 @@
 import http from "k6/http";
 import { check, fail, sleep } from "k6";
 import { Counter } from "k6/metrics";
+import exec from "k6/execution";
 
 const BASE = __ENV.BASE_URL || "https://localhost";
 const STUDENTS = parseInt(__ENV.STUDENTS || "500", 10);
@@ -23,6 +24,7 @@ const ADMIN_PASS = __ENV.ADMIN_PASS;
 const submitted = new Counter("exams_submitted");
 
 export const options = {
+  noCookiesReset: true, // the teacher VU stays logged in across iterations
   insecureSkipTLSVerify: true, // Caddy's internal certificate when DOMAIN=localhost
   setupTimeout: "10m",
   scenarios: {
@@ -134,7 +136,9 @@ function pause() {
 }
 
 export function student(data) {
-  const me = data.creds[__VU - 1];
+  // Unique 0..N-1 within the students scenario (__VU is shared with the teacher VU).
+  const idx = exec.scenario.iterationInTest;
+  const me = data.creds[idx];
   if (!me) return;
   // Everybody logs in within the same minute.
   sleep(Math.random() * LOGIN_WINDOW_S);
@@ -149,7 +153,7 @@ export function student(data) {
 
   // Accounts have no name: name prompt first.
   let page = http.get(`${BASE}/nume`, { tags: { name: "name_page" } });
-  http.post(`${BASE}/nume`, { _csrf: attr(page.body, "_csrf"), full_name: `Elev Test ${__VU}` }, { tags: { name: "name_submit" }, redirects: 0 });
+  http.post(`${BASE}/nume`, { _csrf: attr(page.body, "_csrf"), full_name: `Elev Test ${idx + 1}` }, { tags: { name: "name_submit" }, redirects: 0 });
 
   page = http.get(`${BASE}/test`, { tags: { name: "exam_page" } });
   check(page, { "exam page": (r) => r.status === 200 && r.body.includes("answer-form") });

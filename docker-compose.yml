@@ -36,7 +36,7 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-25}
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-3}
-      RUST_LOG: ${RUST_LOG:-info}
+      RUST_LOG: ${RUST_LOG:-info,sqlx=warn,tower_http=warn}
     volumes:
       - uploads:/data/uploads
     depends_on:

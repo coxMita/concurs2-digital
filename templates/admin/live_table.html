@@ -5,7 +5,7 @@
   <div class="stat"><div class="stat__label">Media notelor</div><div class="stat__value">{{ counters.average }}</div></div>
 </div>
 <div class="row row--between mb-4">
-  <p class="muted small mb-0">Testul este <strong>{{ exam.status.label().to_lowercase() }}</strong> · {{ questions }} întrebări · actualizat la {{ updated }} (la fiecare 5 secunde)</p>
+  <p class="muted small mb-0">Testul este <strong>{{ exam.status.label().to_lowercase() }}</strong>, are {{ questions }} întrebări. Actualizat la {{ updated }}, se reîmprospătează la 5 secunde.</p>
   <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/rezultate.xlsx">Exportă Excel</a>
 </div>
 {% if rows.is_empty() %}

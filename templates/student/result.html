@@ -25,7 +25,7 @@
   {% for q in review %}
   <article class="card question-card" aria-labelledby="rq-{{ q.n }}">
     <div class="row row--between mb-4">
-      <span class="eyebrow mb-0">Întrebarea {{ q.n }} · {{ q.points }} p</span>
+      <span class="eyebrow mb-0">Întrebarea {{ q.n }} ({{ q.points }} p)</span>
       <span class="badge badge--{{ q.outcome_class }}">{{ q.outcome }}</span>
     </div>
     {% if let Some(img) = q.image %}<img class="q-image" src="/uploads/{{ img }}" alt="Imagine pentru întrebarea {{ q.n }}">{% endif %}

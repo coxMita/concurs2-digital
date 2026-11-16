@@ -6,12 +6,12 @@
 {% if locked %}<div class="alert alert--warn" role="note"><p>{{ locked_msg }}</p></div>{% endif %}
 
 <div class="row row--between mb-5">
-  <p class="muted mb-0">{{ questions.len() }} întrebări · {{ total_points }} puncte în total</p>
+  <p class="muted mb-0">{{ questions.len() }} întrebări, {{ total_points }} puncte în total</p>
   <div class="row">
-    <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/export-intrebari">Exportă</a>
+    <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/export-intrebari">Exportă întrebările</a>
     {% if !locked %}
     <a class="btn btn--sm" href="/admin/teste/{{ exam.id }}/import">Import în masă</a>
-    <a class="btn btn--primary btn--sm" href="/admin/teste/{{ exam.id }}/intrebari/noua">+ Întrebare</a>
+    <a class="btn btn--primary btn--sm" href="/admin/teste/{{ exam.id }}/intrebari/noua">Adaugă întrebare</a>
     {% endif %}
   </div>
 </div>

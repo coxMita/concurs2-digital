@@ -196,7 +196,24 @@ not need to be installed:
 ```
 
 The script creates a test exam with 500 accounts, runs k6 against it and
-prints p95 latencies and the error rate.
+prints p95 latencies and the error rate. Delete the "Test de încărcare" exam
+afterwards.
+
+Measured on the full Docker stack (Caddy + app + Postgres) pinned to **2 CPU
+cores and 4 GB in total**. 500 students, 20 questions, all logins within one
+minute, 3–8 s per question, some answers changed, the teacher's dashboard
+polled every 5 s:
+
+| Request | p95 | p99 |
+|---|---|---|
+| login (Argon2 verify) | 104 ms | 160 ms |
+| exam page | 23 ms | 36 ms |
+| autosave | 19 ms | 27 ms |
+| submit | 24 ms | 35 ms |
+| live dashboard | 27 ms | 29 ms |
+
+25,016 requests, 0 errors, 500/500 exams submitted. Peak app memory was
+about 45 MB.
 
 ## Project layout
 

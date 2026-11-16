@@ -1,10 +1,11 @@
 <div class="page-head">
   <div>
-    <a class="eyebrow" href="/admin/teste">← Teste</a>
+    <a class="eyebrow" href="/admin/teste">Toate testele</a>
     <h1>{{ exam.title }}</h1>
     <div class="row mt-4">
       <span class="badge badge--{{ exam.status.as_str() }}">{{ exam.status.label() }}</span>
-      <span class="muted small">{{ exam.duration_minutes }} minute · Rezultate: {{ exam.result_visibility.label() }}</span>
+      <span class="muted small">{{ exam.duration_minutes }} minute</span>
+      <span class="muted small">Elevii văd: {{ exam.result_visibility.label() }}</span>
     </div>
   </div>
 </div>
