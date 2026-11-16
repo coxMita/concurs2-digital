@@ -33,10 +33,15 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=build /src/target/release/concurs /app/concurs
 COPY static /app/static
+# Argon2 allocates ~19 MB per hash. Pin glibc's mmap threshold so these buffers are
+# always mmapped and returned to the OS on free (otherwise a burst of logins grows
+# per-thread arenas), and cap the number of arenas.
 ENV BIND_ADDR=0.0.0.0:8080 \
     STATIC_DIR=/app/static \
     UPLOAD_DIR=/data/uploads \
-    RUST_LOG=info
+    RUST_LOG=info \
+    MALLOC_MMAP_THRESHOLD_=131072 \
+    MALLOC_ARENA_MAX=2
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 CMD ["/app/concurs", "healthcheck"]
