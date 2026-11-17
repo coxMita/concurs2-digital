@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} · {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "admin/_exam_head.html" %}
+
+<a class="eyebrow" href="/admin/teste/{{ exam.id }}/rezultate">Toate rezultatele</a>
+<div class="page-head">
+  <div>
+    <h2 class="mb-0">{{ name }}</h2>
+    <code class="muted">{{ username }}</code>
+  </div>
+  <button class="btn no-print" type="button" data-print>Tipărește lucrarea</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat__label">Stare</div><div class="stat__value stat__value--sm">{{ status }}</div></div>
+  <div class="stat"><div class="stat__label">Nota</div><div class="stat__value">{{ pct }}</div></div>
+  <div class="stat"><div class="stat__label">Nota 1–10</div><div class="stat__value">{{ grade }}</div></div>
+  <div class="stat"><div class="stat__label">Punctaj</div><div class="stat__value">{{ points }}</div></div>
+</div>
+
+<div class="card card--tight mb-5">
+  <dl class="facts">
+    <div><dt>Început la</dt><dd>{% if started.is_empty() %}—{% else %}{{ started }}{% endif %}</dd></div>
+    <div><dt>Terminat la</dt><dd>{% if submitted.is_empty() %}—{% else %}{{ submitted }}{% endif %}</dd></div>
+    <div><dt>Timp lucrat</dt><dd>{% if duration.is_empty() %}—{% else %}{{ duration }}{% endif %}</dd></div>
+    <div><dt>Ieșiri din pagină</dt><dd>{{ focus }}</dd></div>
+    <div><dt>Încercări de copiere</dt><dd>{{ copies }}</dd></div>
+    <div><dt>Capturi (PrintScreen)</dt><dd>{{ screenshots }}</dd></div>
+    <div><dt>Reconectări</dt><dd>{{ relogins }}</dd></div>
+  </dl>
+</div>
+
+<p class="muted small">Întrebările și variantele sunt în ordinea din editor (A, B, C… ca în Excel), nu în ordinea amestecată văzută de elev.</p>
+<div class="stack">
+  {% for q in questions %}
+  <article class="card card--tight" aria-labelledby="w-{{ q.n }}">
+    <div class="row row--between mb-4">
+      <span class="eyebrow mb-0">Întrebarea {{ q.n }}{% if q.multiple %} (mai multe răspunsuri){% endif %}</span>
+      <span class="row">
+        <span class="badge badge--{{ q.outcome_class }}">{{ q.outcome }}</span>
+        <span class="small muted">{{ q.earned }} / {{ q.points }} p</span>
+      </span>
+    </div>
+    {% if let Some(img) = q.image %}<img class="q-image" src="/uploads/{{ img }}" alt="Imagine pentru întrebarea {{ q.n }}">{% endif %}
+    <h3 id="w-{{ q.n }}" class="prewrap">{{ q.text }}</h3>
+    <div class="options">
+      {% for o in q.options %}
+      <div class="option option--review {% if q.multiple %}option--multiple{% else %}option--single{% endif %}{% if o.selected && o.correct %} option--correct{% else if o.selected %} option--wrong{% endif %}">
+        <span class="option__mark" aria-hidden="true">{% if o.selected %}<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endif %}</span>
+        <span class="option__text">{{ o.label }}</span>
+        {% if o.selected && o.correct %}<span class="option__tag">Bifat · corect</span>
+        {% else if o.selected %}<span class="option__tag">Bifat · greșit</span>
+        {% else if o.correct %}<span class="option__tag option__tag--missed">Corect, nebifat</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endblock %}

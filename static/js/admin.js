@@ -122,6 +122,35 @@
     });
   }
 
+  // ---- Sortable tables (results) -------------------------------------------
+  document.querySelectorAll("table[data-sortable]").forEach(function (table) {
+    var buttons = table.querySelectorAll("th .th-sort");
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var th = btn.closest("th");
+        var col = Array.prototype.indexOf.call(th.parentNode.children, th);
+        var numeric = btn.getAttribute("data-sort") === "num";
+        var asc = btn.getAttribute("aria-sort") !== "ascending";
+        buttons.forEach(function (b) { b.removeAttribute("aria-sort"); });
+        btn.setAttribute("aria-sort", asc ? "ascending" : "descending");
+        var tbody = table.tBodies[0];
+        var rows = Array.prototype.slice.call(tbody.rows);
+        var key = function (row) {
+          var cell = row.cells[col];
+          var v = cell.getAttribute("data-sort-value");
+          if (v === null) v = cell.textContent.trim();
+          return numeric ? parseFloat(v) : v.toLowerCase();
+        };
+        rows.sort(function (a, b) {
+          var x = key(a), y = key(b);
+          var r = numeric ? x - y : x.localeCompare(y, "ro");
+          return asc ? r : -r;
+        });
+        rows.forEach(function (r) { tbody.appendChild(r); });
+      });
+    });
+  });
+
   // ---- Print buttons -----------------------------------------------------
   document.addEventListener("click", function (e) {
     if (e.target.closest("[data-print]")) window.print();

@@ -52,6 +52,7 @@ pub async fn live(db: &PgPool, exam_id: Uuid) -> Result<Vec<LiveRow>, sqlx::Erro
 }
 
 pub struct ExportStudent {
+    pub id: Uuid,
     pub full_name: Option<String>,
     pub username: String,
     pub attempt_id: Option<Uuid>,
@@ -78,7 +79,7 @@ pub struct ExportData {
 pub async fn export_data(db: &PgPool, exam_id: Uuid) -> Result<ExportData, sqlx::Error> {
     let students = sqlx::query_as!(
         ExportStudent,
-        r#"SELECT s.full_name, s.username, a.id AS "attempt_id?", a.started_at AS "started_at?",
+        r#"SELECT s.id, s.full_name, s.username, a.id AS "attempt_id?", a.started_at AS "started_at?",
                   a.submitted_at, a.earned_points, a.max_points AS "max_points?", a.percentage,
                   a.focus_losses AS "focus_losses?", a.focus_away_ms AS "focus_away_ms?",
                   a.copy_attempts AS "copy_attempts?",
@@ -125,4 +126,26 @@ pub async fn export_data(db: &PgPool, exam_id: Uuid) -> Result<ExportData, sqlx:
         attempt_questions,
         selections,
     })
+}
+
+/// Integrity counters of one student's attempt (zeros if not started).
+#[derive(Default)]
+pub struct AttemptExtras {
+    pub focus_losses: i32,
+    pub focus_away_ms: i64,
+    pub copy_attempts: i32,
+    pub screenshot_attempts: i32,
+    pub login_count: i32,
+}
+
+pub async fn attempt_extras(db: &PgPool, student_id: Uuid) -> Result<AttemptExtras, sqlx::Error> {
+    Ok(sqlx::query_as!(
+        AttemptExtras,
+        "SELECT focus_losses, focus_away_ms, copy_attempts, screenshot_attempts, login_count
+         FROM attempts WHERE student_id = $1",
+        student_id
+    )
+    .fetch_optional(db)
+    .await?
+    .unwrap_or_default())
 }

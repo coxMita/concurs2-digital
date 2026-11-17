@@ -2,7 +2,7 @@
 
 use rust_xlsxwriter::{Color, Format, FormatAlign, FormatBorder, Workbook, XlsxError};
 
-use crate::services::grading::{Outcome, fmt_points};
+use crate::services::grading::{Outcome, fmt_points, grade_1_10};
 
 fn header_format() -> Format {
     Format::new()
@@ -51,6 +51,7 @@ pub fn credentials_xlsx(exam_title: &str, rows: &[Credential]) -> Result<Vec<u8>
 
 /// One student row of the results sheet.
 pub struct ResultRow {
+    pub student_id: uuid::Uuid,
     pub name: String,
     pub username: String,
     pub percentage: Option<f64>,
@@ -126,6 +127,7 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
             "Nume",
             "Utilizator",
             "Nota (%)",
+            "Nota (1–10)",
             "Punctaj",
             "Status",
             "Început la",
@@ -157,13 +159,14 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
             ws.write_string(r, 1, &row.username)?;
             if let Some(p) = row.percentage {
                 ws.write_number_with_format(r, 2, p, &pct)?;
+                ws.write_number_with_format(r, 3, grade_1_10(p), &pct)?;
             }
             if let (Some(e), Some(m)) = (row.earned, row.max) {
-                ws.write_string(r, 3, format!("{} / {m}", fmt_points(e)))?;
+                ws.write_string(r, 4, format!("{} / {m}", fmt_points(e)))?;
             }
-            ws.write_string(r, 4, row.status)?;
-            ws.write_string(r, 5, &row.started_at)?;
-            ws.write_string(r, 6, &row.submitted_at)?;
+            ws.write_string(r, 5, row.status)?;
+            ws.write_string(r, 6, &row.started_at)?;
+            ws.write_string(r, 7, &row.submitted_at)?;
             for (i, o) in row.outcomes.iter().enumerate() {
                 let c = q0 + i as u16;
                 let chosen = row.answers.get(i).map(String::as_str).unwrap_or("");
@@ -209,10 +212,11 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
         ws.set_column_width(0, 28)?;
         ws.set_column_width(1, 18)?;
         ws.set_column_width(2, 10)?;
-        ws.set_column_width(3, 10)?;
-        ws.set_column_width(4, 15)?;
-        ws.set_column_width(5, 17)?;
+        ws.set_column_width(3, 11)?;
+        ws.set_column_width(4, 10)?;
+        ws.set_column_width(5, 15)?;
         ws.set_column_width(6, 17)?;
+        ws.set_column_width(7, 17)?;
         for i in 0..questions.len() {
             ws.set_column_width(q0 + i as u16, 26)?;
         }

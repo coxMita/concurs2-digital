@@ -78,6 +78,10 @@ pub fn router() -> Router<AppState> {
         .route("/teste/{id}/live/tabel", get(results::live_table))
         .route("/teste/{id}/rezultate", get(results::results_page))
         .route(
+            "/teste/{id}/rezultate/elev/{sid}",
+            get(results::student_work),
+        )
+        .route(
             "/teste/{id}/rezultate.xlsx",
             get(results::results_xlsx_download),
         )

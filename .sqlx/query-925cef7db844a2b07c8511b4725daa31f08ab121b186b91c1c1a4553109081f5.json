@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT focus_losses, focus_away_ms, copy_attempts, screenshot_attempts, login_count\n         FROM attempts WHERE student_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "focus_losses",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "focus_losses"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "focus_away_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "focus_away_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "copy_attempts",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "copy_attempts"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "screenshot_attempts",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "screenshot_attempts"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "login_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "login_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "925cef7db844a2b07c8511b4725daa31f08ab121b186b91c1c1a4553109081f5"
+}

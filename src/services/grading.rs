@@ -139,6 +139,12 @@ pub fn grade<'a>(
     }
 }
 
+/// Romanian 1–10 grade from a percentage: 1 + 9 × p / 100, rounded to 2 decimals
+/// (0% -> 1, 50% -> 5.5, 100% -> 10).
+pub fn grade_1_10(percentage: f64) -> f64 {
+    round2(1.0 + 9.0 * percentage.clamp(0.0, 100.0) / 100.0)
+}
+
 /// Points for display: "3", "1,5", "0,67" (Romanian decimal comma).
 pub fn fmt_points(p: f64) -> String {
     let p = round2(p);
@@ -294,6 +300,14 @@ mod tests {
         assert!((percentage(2.0, 3) - 66.67).abs() < 1e-9);
         assert_eq!(percentage(0.0, 0), 0.0);
         assert_eq!(percentage(5.0, 5), 100.0);
+    }
+
+    #[test]
+    fn romanian_grade() {
+        assert_eq!(grade_1_10(0.0), 1.0);
+        assert_eq!(grade_1_10(50.0), 5.5);
+        assert_eq!(grade_1_10(100.0), 10.0);
+        assert_eq!(grade_1_10(33.33), 4.0);
     }
 
     #[test]

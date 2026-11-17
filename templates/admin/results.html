@@ -2,41 +2,119 @@
 {% block title %}Rezultate · {{ exam.title }}{% endblock %}
 {% block content %}
 {% include "admin/_exam_head.html" %}
+
 <div class="stats">
-  <div class="stat"><div class="stat__label">Lucrări trimise</div><div class="stat__value">{{ submitted }} <small>/ {{ total }}</small></div></div>
-  <div class="stat"><div class="stat__label">Media notelor</div><div class="stat__value">{{ average }}</div></div>
-</div>
-<div class="card mb-5">
-  <div class="card__head">
-    <div>
-      <h2>Export Excel</h2>
-      <p class="muted">Foile „Rezultate” (câte o coloană pe întrebare, colorată Corect/Greșit/Fără răspuns), „Întrebări” și „Statistici”. Disponibil oricând, inclusiv în timpul testului.</p>
-    </div>
-  </div>
-  <a class="btn btn--primary" href="/admin/teste/{{ exam.id }}/rezultate.xlsx">Descarcă rezultatele (.xlsx)</a>
+  <div class="stat"><div class="stat__label">Lucrări trimise</div><div class="stat__value">{{ summary.submitted }} <small>/ {{ summary.total }}</small></div></div>
+  <div class="stat"><div class="stat__label">Media</div><div class="stat__value">{{ summary.average }}</div></div>
+  <div class="stat"><div class="stat__label">Media (nota 1–10)</div><div class="stat__value">{{ summary.average_grade }}</div></div>
+  <div class="stat"><div class="stat__label">Mediana</div><div class="stat__value">{{ summary.median }}</div></div>
+  <div class="stat"><div class="stat__label">Minim / maxim</div><div class="stat__value stat__value--sm">{{ summary.min }} <small>/</small> {{ summary.max }}</div></div>
 </div>
 
-<h2>Statistici pe întrebări</h2>
-{% if stats.is_empty() %}
-<p class="muted">Testul nu are întrebări.</p>
-{% else %}
-<div class="table-wrap">
-  <table class="table">
-    <thead><tr><th>Nr.</th><th>Întrebare</th><th class="num">Corecte</th><th class="num">Parțiale</th><th class="num">Greșite</th><th class="num">Fără răspuns</th><th>Corect (%)</th></tr></thead>
-    <tbody>
-      {% for s in stats %}
-      <tr>
-        <td>Î{{ s.n }}</td>
-        <td class="cell-text">{{ s.text }}</td>
-        <td class="num cell-ok">{{ s.correct }}</td>
-        <td class="num">{{ s.partial }}</td>
-        <td class="num cell-bad">{{ s.wrong }}</td>
-        <td class="num">{{ s.unanswered }}</td>
-        <td><div class="row nowrap"><meter class="meter" min="0" max="100" low="40" high="70" optimum="100" value="{{ s.pct }}">{{ s.pct }}%</meter><span class="small">{{ s.pct }}%</span></div></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="row row--between mb-5">
+  <p class="muted mb-0">Nota pe scara 1–10 = 1 + 9 × procent / 100 (0% → 1, 50% → 5,50, 100% → 10).</p>
+  <a class="btn btn--primary" href="/admin/teste/{{ exam.id }}/rezultate.xlsx">Descarcă Excel</a>
 </div>
-{% endif %}
+
+<div class="grid grid--2 mb-5">
+  <section class="card card--tight" aria-labelledby="dist-title">
+    <h2 id="dist-title">Distribuția notelor</h2>
+    {% if summary.submitted == 0 %}
+    <p class="muted mb-0">Nicio lucrare trimisă încă.</p>
+    {% else %}
+    <div class="dist">
+      {% for b in buckets %}
+      <div class="dist__row">
+        <span class="dist__label">{{ b.label }}</span>
+        <meter class="dist__bar" min="0" max="{{ bucket_max }}" value="{{ b.count }}">{{ b.count }}</meter>
+        <span class="dist__count">{{ b.count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="card card--tight" aria-labelledby="xlsx-title">
+    <h2 id="xlsx-title">Export Excel</h2>
+    <p class="muted">Foaia „Rezultate”: nota (% și 1–10), punctaj, ce a bifat fiecare elev la fiecare întrebare (colorat Corect / Parțial / Greșit / Fără răspuns) și semnalele de integritate. Plus foile „Întrebări” și „Statistici”. Disponibil oricând, inclusiv în timpul testului.</p>
+    <a class="btn" href="/admin/teste/{{ exam.id }}/rezultate.xlsx">Descarcă rezultatele (.xlsx)</a>
+  </section>
+</div>
+
+<section class="mb-6" aria-labelledby="students-title">
+  <h2 id="students-title">Elevi</h2>
+  {% if students.is_empty() %}
+  <p class="muted">Niciun elev.</p>
+  {% else %}
+  <p class="muted small">Click pe titlul unei coloane pentru a ordona. Click pe un elev pentru a-i vedea lucrarea.</p>
+  <div class="table-wrap">
+    <table class="table" data-sortable>
+      <thead>
+        <tr>
+          <th><button class="th-sort" type="button" data-sort="text">Elev</button></th>
+          <th><button class="th-sort" type="button" data-sort="text">Stare</button></th>
+          <th class="num"><button class="th-sort" type="button" data-sort="num">Nota (%)</button></th>
+          <th class="num"><button class="th-sort" type="button" data-sort="num">Nota 1–10</button></th>
+          <th class="num">Punctaj</th>
+          <th class="num"><button class="th-sort" type="button" data-sort="num">Timp lucrat</button></th>
+          <th>Observații</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td data-sort-value="{% if s.name.is_empty() %}{{ s.username }}{% else %}{{ s.name }}{% endif %}">
+            <a href="/admin/teste/{{ exam.id }}/rezultate/elev/{{ s.id }}"><strong>{% if s.name.is_empty() %}(fără nume){% else %}{{ s.name }}{% endif %}</strong></a><br>
+            <code class="small muted">{{ s.username }}</code>
+          </td>
+          <td data-sort-value="{{ s.status }}"><span class="badge badge--{{ s.status_class }}">{{ s.status }}</span></td>
+          <td class="num" data-sort-value="{{ s.pct_sort }}"><strong>{{ s.pct }}</strong></td>
+          <td class="num" data-sort-value="{{ s.pct_sort }}">{{ s.grade }}</td>
+          <td class="num">{{ s.points }}</td>
+          <td class="num" data-sort-value="{{ s.secs_sort }}">{{ s.duration }}</td>
+          <td>{% if !s.flags.is_empty() %}<span class="badge badge--warn">{{ s.flags }}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="questions-title">
+  <h2 id="questions-title">Analiza întrebărilor</h2>
+  {% if stats.is_empty() %}
+  <p class="muted">Testul nu are întrebări.</p>
+  {% else %}
+  <p class="muted small">Pentru fiecare întrebare: câți elevi au ales fiecare variantă. Variantele corecte sunt marcate cu ✓. O variantă greșită aleasă de mulți elevi indică o capcană sau o formulare ambiguă.</p>
+  <div class="stack">
+    {% for s in stats %}
+    <article class="card card--tight" aria-labelledby="qs-{{ s.n }}">
+      <div class="card__head">
+        <div>
+          <span class="eyebrow">Întrebarea {{ s.n }}{% if s.multiple %} (mai multe răspunsuri){% endif %}</span>
+          <h3 id="qs-{{ s.n }}" class="prewrap">{{ s.text }}</h3>
+        </div>
+        <span class="badge badge--plain nowrap">{{ s.pct }}% corect</span>
+      </div>
+      <div class="row small mb-4">
+        <span class="cell-ok">{{ s.correct }} corecte</span>
+        {% if s.multiple %}<span>{{ s.partial }} parțiale</span>{% endif %}
+        <span class="cell-bad">{{ s.wrong }} greșite</span>
+        <span class="muted">{{ s.unanswered }} fără răspuns</span>
+      </div>
+      <div class="choices">
+        {% for o in s.options %}
+        <div class="choice{% if o.correct %} choice--correct{% endif %}">
+          <span class="choice__label">{% if o.correct %}✓ {% endif %}{{ o.label }}</span>
+          <meter class="choice__bar" min="0" max="{{ s.answered_total }}" value="{{ o.count }}">{{ o.count }}</meter>
+          <span class="choice__count">{{ o.count }} ({{ o.pct }}%)</span>
+        </div>
+        {% endfor %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
 {% endblock %}

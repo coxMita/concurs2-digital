@@ -656,13 +656,14 @@ async fn results_excel_has_the_right_columns_and_values(pool: PgPool) {
     );
 
     let res = wb.worksheet_range("Rezultate").unwrap();
-    let header: Vec<String> = (0..10).map(|c| cell(&res, 0, c)).collect();
+    let header: Vec<String> = (0..11).map(|c| cell(&res, 0, c)).collect();
     assert_eq!(
         header,
         [
             "Nume",
             "Utilizator",
             "Nota (%)",
+            "Nota (1–10)",
             "Punctaj",
             "Status",
             "Început la",
@@ -676,18 +677,23 @@ async fn results_excel_has_the_right_columns_and_values(pool: PgPool) {
     assert_eq!(cell(&res, 1, 0), "Elev a1");
     assert_eq!(cell(&res, 1, 1), "a1");
     assert_eq!(res.get_value((1, 2)), Some(&Data::Float(25.0)));
-    assert_eq!(cell(&res, 1, 3), "1 / 4");
-    assert_eq!(cell(&res, 1, 4), "Terminat");
-    assert!(!cell(&res, 1, 5).is_empty());
+    assert_eq!(
+        res.get_value((1, 3)),
+        Some(&Data::Float(3.25)),
+        "1 + 9 × 25%"
+    );
+    assert_eq!(cell(&res, 1, 4), "1 / 4");
+    assert_eq!(cell(&res, 1, 5), "Terminat");
     assert!(!cell(&res, 1, 6).is_empty());
-    assert_eq!(cell(&res, 1, 7), "Corect: A) A");
-    assert_eq!(cell(&res, 1, 8), "Greșit: A) A");
-    assert_eq!(cell(&res, 1, 9), "Fără răspuns");
+    assert!(!cell(&res, 1, 7).is_empty());
+    assert_eq!(cell(&res, 1, 8), "Corect: A) A");
+    assert_eq!(cell(&res, 1, 9), "Greșit: A) A");
+    assert_eq!(cell(&res, 1, 10), "Fără răspuns");
     // Row 2: b2 never started.
     assert_eq!(cell(&res, 2, 1), "b2");
     assert_eq!(cell(&res, 2, 2), "");
-    assert_eq!(cell(&res, 2, 4), "Neînceput");
-    assert_eq!(cell(&res, 2, 7), "");
+    assert_eq!(cell(&res, 2, 5), "Neînceput");
+    assert_eq!(cell(&res, 2, 8), "");
 
     let qs = wb.worksheet_range("Întrebări").unwrap();
     assert_eq!(cell(&qs, 1, 0), "Î1");
@@ -836,14 +842,14 @@ async fn integrity_events_are_recorded_and_reported(pool: PgPool) {
         .await;
     let mut wb: Xlsx<_> = open_workbook_from_rs(Cursor::new(x.body)).unwrap();
     let res = wb.worksheet_range("Rezultate").unwrap();
-    // 7 fixed columns + 3 questions, then the integrity columns.
-    assert_eq!(cell(&res, 0, 10), "Ieșiri din pagină");
-    assert_eq!(cell(&res, 0, 11), "Timp în afara paginii (s)");
-    assert_eq!(cell(&res, 0, 12), "Încercări de copiere");
-    assert_eq!(cell(&res, 0, 13), "Capturi de ecran (PrintScreen)");
-    assert_eq!(res.get_value((1, 10)), Some(&Data::Float(2.0)));
-    assert_eq!(res.get_value((1, 12)), Some(&Data::Float(2.0)));
-    assert_eq!(res.get_value((1, 13)), Some(&Data::Float(1.0)));
+    // 8 fixed columns + 3 questions, then the integrity columns.
+    assert_eq!(cell(&res, 0, 11), "Ieșiri din pagină");
+    assert_eq!(cell(&res, 0, 12), "Timp în afara paginii (s)");
+    assert_eq!(cell(&res, 0, 13), "Încercări de copiere");
+    assert_eq!(cell(&res, 0, 14), "Capturi de ecran (PrintScreen)");
+    assert_eq!(res.get_value((1, 11)), Some(&Data::Float(2.0)));
+    assert_eq!(res.get_value((1, 13)), Some(&Data::Float(2.0)));
+    assert_eq!(res.get_value((1, 14)), Some(&Data::Float(1.0)));
 }
 
 #[sqlx::test]
@@ -952,12 +958,12 @@ async fn partial_scoring_for_multiple_answer_questions(pool: PgPool) {
         .await;
     let mut wb: Xlsx<_> = open_workbook_from_rs(Cursor::new(x.body)).unwrap();
     let res = wb.worksheet_range("Rezultate").unwrap();
-    assert_eq!(cell(&res, 1, 3), "4 / 10");
-    assert_eq!(cell(&res, 1, 7), "Parțial 50%: A) A");
-    assert_eq!(cell(&res, 1, 8), "Corect: A) A; B) B");
-    assert_eq!(cell(&res, 1, 9), "Greșit: A) A; C) C");
-    assert_eq!(cell(&res, 1, 10), "Parțial 50%: A) A; B) B; C) C");
-    assert_eq!(cell(&res, 1, 11), "Greșit: A) A; B) B; C) C; D) D");
+    assert_eq!(cell(&res, 1, 4), "4 / 10");
+    assert_eq!(cell(&res, 1, 8), "Parțial 50%: A) A");
+    assert_eq!(cell(&res, 1, 9), "Corect: A) A; B) B");
+    assert_eq!(cell(&res, 1, 10), "Greșit: A) A; C) C");
+    assert_eq!(cell(&res, 1, 11), "Parțial 50%: A) A; B) B; C) C");
+    assert_eq!(cell(&res, 1, 12), "Greșit: A) A; B) B; C) C; D) D");
 
     // Switching the exam to all-or-nothing regrades submitted work right away.
     let r = admin
@@ -978,4 +984,90 @@ async fn partial_scoring_for_multiple_answer_questions(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(pct, 20.0, "only M2 counts");
+}
+
+#[sqlx::test]
+async fn results_page_shows_students_distribution_and_option_choices(pool: PgPool) {
+    let app = spawn(pool.clone()).await;
+    let exam = exam(
+        &app,
+        ExamStatus::Open,
+        ResultVisibility::Score,
+        three_questions(),
+    )
+    .await;
+    student(&app, exam, "ana", "pw-ana-1").await;
+    student(&app, exam, "ion", "pw-ion-1").await;
+    student(&app, exam, "vlad", "pw-vlad-1").await;
+
+    let mut a = student_client(&app, "ana", "pw-ana-1").await;
+    a.get("/test").await;
+    answer(&mut a, &pool, exam, "Q1", &["A"]).await;
+    answer(&mut a, &pool, exam, "Q2", &["A", "B"]).await;
+    answer(&mut a, &pool, exam, "Q3", &["A", "B"]).await;
+    a.post("/test/finalizeaza", &[]).await; // 100%
+
+    let mut i = student_client(&app, "ion", "pw-ion-1").await;
+    i.get("/test").await;
+    answer(&mut i, &pool, exam, "Q1", &["B"]).await;
+    i.post("/test/finalizeaza", &[]).await; // 0%
+
+    let mut admin = admin_client(&app).await;
+    let html = admin
+        .get(&format!("/admin/teste/{exam}/rezultate"))
+        .await
+        .text();
+    // Summary: two submitted of three, average 50%, grade 1–10 of the average.
+    assert!(html.contains("2 <small>/ 3</small>"));
+    assert!(html.contains("50,00%"));
+    assert!(html.contains("5,50"));
+    // Distribution: one in 0–10%, one in 90–100%.
+    assert!(html.contains("0–10%"));
+    assert!(html.contains("90–100%"));
+    // Students table links to each student's work.
+    let ana_id: Uuid = sqlx::query_scalar("SELECT id FROM students WHERE username = 'ana'")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(html.contains(&format!("/admin/teste/{exam}/rezultate/elev/{ana_id}")));
+    assert!(html.contains("10,00"), "ana's 1–10 grade");
+    // Option analysis for Q1: A chosen once (correct), B chosen once.
+    assert!(html.contains("✓ A) A"));
+    assert!(html.contains("1 (50%)"));
+
+    // One student's work: canonical letters, selections and correctness.
+    let work = admin
+        .get(&format!("/admin/teste/{exam}/rezultate/elev/{ana_id}"))
+        .await
+        .text();
+    assert!(work.contains("Elev ana"));
+    assert!(work.contains("Bifat · corect"));
+    assert!(work.contains("100,00%"));
+    assert!(!work.contains("Bifat · greșit"));
+
+    let ion_id: Uuid = sqlx::query_scalar("SELECT id FROM students WHERE username = 'ion'")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let work = admin
+        .get(&format!("/admin/teste/{exam}/rezultate/elev/{ion_id}"))
+        .await
+        .text();
+    assert!(work.contains("Bifat · greșit"));
+    assert!(work.contains("Corect, nebifat"));
+    assert!(work.contains("Fără răspuns"));
+
+    // A student of another exam is not reachable through this exam.
+    let other = exam_with_scoring(
+        &app,
+        ExamStatus::Open,
+        ResultVisibility::Score,
+        concurs::db::exams::ScoringMode::Partial,
+        three_questions(),
+    )
+    .await;
+    let r = admin
+        .get(&format!("/admin/teste/{other}/rezultate/elev/{ana_id}"))
+        .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
 }
