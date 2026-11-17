@@ -680,8 +680,8 @@ async fn results_excel_has_the_right_columns_and_values(pool: PgPool) {
     assert_eq!(cell(&res, 1, 4), "Terminat");
     assert!(!cell(&res, 1, 5).is_empty());
     assert!(!cell(&res, 1, 6).is_empty());
-    assert_eq!(cell(&res, 1, 7), "Corect");
-    assert_eq!(cell(&res, 1, 8), "Greșit");
+    assert_eq!(cell(&res, 1, 7), "Corect: A) A");
+    assert_eq!(cell(&res, 1, 8), "Greșit: A) A");
     assert_eq!(cell(&res, 1, 9), "Fără răspuns");
     // Row 2: b2 never started.
     assert_eq!(cell(&res, 2, 1), "b2");
@@ -693,7 +693,8 @@ async fn results_excel_has_the_right_columns_and_values(pool: PgPool) {
     assert_eq!(cell(&qs, 1, 0), "Î1");
     assert_eq!(cell(&qs, 1, 1), "Q1");
     assert_eq!(cell(&qs, 2, 2), "Mai multe răspunsuri corecte");
-    assert_eq!(cell(&qs, 2, 4), "A; B");
+    assert_eq!(cell(&qs, 2, 4), "A) A\nB) B\nC) C");
+    assert_eq!(cell(&qs, 2, 5), "A) A; B) B");
 
     let st = wb.worksheet_range("Statistici").unwrap();
     assert_eq!(cell(&st, 0, 5), "Corect (%)");

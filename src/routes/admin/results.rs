@@ -19,7 +19,7 @@ use crate::{
     routes::admin::{exams::load, students::xlsx_response},
     services::{
         exam_cache::ExamContent,
-        export::{QuestionInfo, ResultRow, results_xlsx},
+        export::{QuestionInfo, ResultRow, labeled, results_xlsx},
         grading::{self, Outcome},
     },
     state::AppState,
@@ -216,11 +216,19 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
                 AnswerType::Multiple => "Mai multe răspunsuri corecte",
             },
             points: q.points,
+            options: q
+                .options
+                .iter()
+                .enumerate()
+                .map(|(i, o)| labeled(i, &o.text, 200))
+                .collect::<Vec<_>>()
+                .join("\n"),
             correct: q
                 .options
                 .iter()
-                .filter(|o| o.is_correct)
-                .map(|o| o.text.as_str())
+                .enumerate()
+                .filter(|(_, o)| o.is_correct)
+                .map(|(i, o)| labeled(i, &o.text, 200))
                 .collect::<Vec<_>>()
                 .join("; "),
         })
@@ -230,6 +238,27 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
         .students
         .iter()
         .map(|s| {
+            // Chosen options per question, labeled by canonical position.
+            let answers: Vec<String> = match s.attempt_id {
+                None => vec![String::new(); content.questions.len()],
+                Some(aid) => {
+                    let sels = data.selections.get(&aid).unwrap_or(&empty);
+                    content
+                        .questions
+                        .iter()
+                        .map(|q| {
+                            let chosen = sels.get(&q.id);
+                            q.options
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, o)| chosen.is_some_and(|c| c.contains(&o.id)))
+                                .map(|(i, o)| labeled(i, &o.text, 40))
+                                .collect::<Vec<_>>()
+                                .join("; ")
+                        })
+                        .collect()
+                }
+            };
             let outcomes = match s.attempt_id {
                 None => vec![None; content.questions.len()],
                 Some(aid) => {
@@ -262,6 +291,7 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
                 started_at: fmt_dt_opt(&s.started_at),
                 submitted_at: fmt_dt_opt(&s.submitted_at),
                 outcomes,
+                answers,
                 focus_losses: s.focus_losses,
                 away_seconds: s.focus_away_ms.map(|ms| (ms + 500) / 1000),
                 copy_attempts: s.copy_attempts,

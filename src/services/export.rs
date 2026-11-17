@@ -61,6 +61,8 @@ pub struct ResultRow {
     pub submitted_at: String,
     /// Outcome per question in canonical order (None = not part of the attempt).
     pub outcomes: Vec<Option<Outcome>>,
+    /// Chosen options per question, e.g. "A) 2; C) 4" (letters in canonical order).
+    pub answers: Vec<String>,
     /// Integrity signals (None = never started).
     pub focus_losses: Option<i32>,
     pub away_seconds: Option<i64>,
@@ -72,7 +74,28 @@ pub struct QuestionInfo {
     pub text: String,
     pub answer_type: &'static str,
     pub points: i32,
+    /// All options, one per line: "A) ...", "B) ..." (canonical order).
+    pub options: String,
+    /// Correct options, e.g. "A) București".
     pub correct: String,
+}
+
+/// Option letter by canonical position: 0 -> 'A'.
+pub fn letter(i: usize) -> char {
+    char::from(b'A' + u8::try_from(i % 26).unwrap_or(0))
+}
+
+/// "A) text" with long texts shortened for spreadsheet cells.
+pub fn labeled(i: usize, text: &str, max_chars: usize) -> String {
+    let one_line = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let short: String = if one_line.chars().count() > max_chars {
+        let mut t: String = one_line.chars().take(max_chars.saturating_sub(1)).collect();
+        t.push('…');
+        t
+    } else {
+        one_line
+    };
+    format!("{}) {short}", letter(i))
 }
 
 pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Vec<u8>, XlsxError> {
@@ -141,9 +164,14 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
             ws.write_string(r, 6, &row.submitted_at)?;
             for (i, o) in row.outcomes.iter().enumerate() {
                 let c = q0 + i as u16;
+                let chosen = row.answers.get(i).map(String::as_str).unwrap_or("");
                 match o {
-                    Some(Outcome::Correct) => ws.write_string_with_format(r, c, "Corect", &ok)?,
-                    Some(Outcome::Wrong) => ws.write_string_with_format(r, c, "Greșit", &bad)?,
+                    Some(Outcome::Correct) => {
+                        ws.write_string_with_format(r, c, format!("Corect: {chosen}"), &ok)?
+                    }
+                    Some(Outcome::Wrong) => {
+                        ws.write_string_with_format(r, c, format!("Greșit: {chosen}"), &bad)?
+                    }
                     Some(Outcome::Unanswered) => {
                         ws.write_string_with_format(r, c, "Fără răspuns", &none)?
                     }
@@ -175,7 +203,7 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
         ws.set_column_width(5, 17)?;
         ws.set_column_width(6, 17)?;
         for i in 0..questions.len() {
-            ws.set_column_width(q0 + i as u16, 13)?;
+            ws.set_column_width(q0 + i as u16, 26)?;
         }
         for j in 0..4 {
             ws.set_column_width(g0 + j, 16)?;
@@ -192,6 +220,7 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
             "Întrebare",
             "Tip răspuns",
             "Punctaj",
+            "Variante",
             "Răspuns(uri) corect(e)",
         ]
         .iter()
@@ -205,13 +234,15 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
             ws.write_string_with_format(r, 1, &q.text, &wrap)?;
             ws.write_string(r, 2, q.answer_type)?;
             ws.write_number(r, 3, f64::from(q.points))?;
-            ws.write_string_with_format(r, 4, &q.correct, &wrap)?;
+            ws.write_string_with_format(r, 4, &q.options, &wrap)?;
+            ws.write_string_with_format(r, 5, &q.correct, &wrap)?;
         }
         ws.set_column_width(0, 6)?;
         ws.set_column_width(1, 60)?;
         ws.set_column_width(2, 26)?;
         ws.set_column_width(3, 9)?;
-        ws.set_column_width(4, 40)?;
+        ws.set_column_width(4, 45)?;
+        ws.set_column_width(5, 35)?;
         ws.set_freeze_panes(1, 1)?;
     }
 
