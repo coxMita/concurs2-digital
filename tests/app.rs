@@ -176,15 +176,15 @@ async fn grading_single_and_multiple_with_partial_selections(pool: PgPool) {
     answer(&mut i, &pool, exam, "Q3", &["B", "A"]).await;
     i.post("/test/finalizeaza", &[]).await;
 
-    let rows: Vec<(String, i32, i32, f64)> = sqlx::query_as(
+    let rows: Vec<(String, f64, i32, f64)> = sqlx::query_as(
         "SELECT s.username, a.earned_points, a.max_points, a.percentage
          FROM attempts a JOIN students s ON s.id = a.student_id ORDER BY 1",
     )
     .fetch_all(&pool)
     .await
     .unwrap();
-    assert_eq!(rows[0], ("ana".into(), 3, 4, 75.0));
-    assert_eq!(rows[1], ("ion".into(), 1, 4, 25.0));
+    assert_eq!(rows[0], ("ana".into(), 3.0, 4, 75.0));
+    assert_eq!(rows[1], ("ion".into(), 1.0, 4, 25.0));
 
     let page = a.get("/rezultat").await.text();
     assert!(page.contains("75,00%"), "score shown");
@@ -897,4 +897,85 @@ async fn reset_password_is_shown_under_the_student_once(pool: PgPool) {
         .await;
     assert_eq!(old.status, StatusCode::UNAUTHORIZED);
     student_client(&app, "ana", &pw).await;
+}
+
+// ---- Partial scoring -----------------------------------------------------------------
+
+#[sqlx::test]
+async fn partial_scoring_for_multiple_answer_questions(pool: PgPool) {
+    use concurs::db::exams::ScoringMode;
+    let app = spawn(pool.clone()).await;
+    // Each question: 4 options, A and B correct, 2 points.
+    let qs = ["M1", "M2", "M3", "M4", "M5"]
+        .iter()
+        .map(|t| {
+            q(
+                t,
+                Multiple,
+                2,
+                &[("A", true), ("B", true), ("C", false), ("D", false)],
+            )
+        })
+        .collect();
+    let exam = exam_with_scoring(
+        &app,
+        ExamStatus::Open,
+        ResultVisibility::ScoreAndAnswers,
+        ScoringMode::Partial,
+        qs,
+    )
+    .await;
+    student(&app, exam, "ana", "pw-ana-1").await;
+    let mut s = student_client(&app, "ana", "pw-ana-1").await;
+    s.get("/test").await;
+    answer(&mut s, &pool, exam, "M1", &["A"]).await; // 50% -> 1 p
+    answer(&mut s, &pool, exam, "M2", &["A", "B"]).await; // 100% -> 2 p
+    answer(&mut s, &pool, exam, "M3", &["A", "C"]).await; // 0
+    answer(&mut s, &pool, exam, "M4", &["A", "B", "C"]).await; // 50% -> 1 p
+    answer(&mut s, &pool, exam, "M5", &["A", "B", "C", "D"]).await; // 0
+    s.post("/test/finalizeaza", &[]).await;
+
+    let (earned, max, pct): (f64, i32, f64) =
+        sqlx::query_as("SELECT earned_points, max_points, percentage FROM attempts")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!((earned, max, pct), (4.0, 10, 40.0));
+
+    let page = s.get("/rezultat").await.text();
+    assert!(page.contains("Ai obținut 4 din 10 puncte"));
+    assert_eq!(page.matches("Parțial: 1 din 2 p").count(), 2);
+
+    let mut admin = admin_client(&app).await;
+    let x = admin
+        .get(&format!("/admin/teste/{exam}/rezultate.xlsx"))
+        .await;
+    let mut wb: Xlsx<_> = open_workbook_from_rs(Cursor::new(x.body)).unwrap();
+    let res = wb.worksheet_range("Rezultate").unwrap();
+    assert_eq!(cell(&res, 1, 3), "4 / 10");
+    assert_eq!(cell(&res, 1, 7), "Parțial 50%: A) A");
+    assert_eq!(cell(&res, 1, 8), "Corect: A) A; B) B");
+    assert_eq!(cell(&res, 1, 9), "Greșit: A) A; C) C");
+    assert_eq!(cell(&res, 1, 10), "Parțial 50%: A) A; B) B; C) C");
+    assert_eq!(cell(&res, 1, 11), "Greșit: A) A; B) B; C) C; D) D");
+
+    // Switching the exam to all-or-nothing regrades submitted work right away.
+    let r = admin
+        .post(
+            &format!("/admin/teste/{exam}"),
+            &[
+                ("title", "Test"),
+                ("description", ""),
+                ("duration_minutes", "30"),
+                ("result_visibility", "score_and_answers"),
+                ("scoring", "all_or_nothing"),
+            ],
+        )
+        .await;
+    assert_eq!(r.status, StatusCode::SEE_OTHER);
+    let pct: f64 = sqlx::query_scalar("SELECT percentage FROM attempts")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(pct, 20.0, "only M2 counts");
 }

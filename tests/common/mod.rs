@@ -14,7 +14,7 @@ use concurs::{
     app,
     config::Config,
     db::{
-        exams::{self, ExamInput, ExamStatus, ResultVisibility},
+        exams::{self, ExamInput, ExamStatus, ResultVisibility, ScoringMode},
         questions::{self, AnswerType, OptionInput, QuestionInput},
         students::{self, NewStudent},
     },
@@ -190,11 +190,21 @@ pub fn q(text: &str, t: AnswerType, points: i32, opts: &[(&str, bool)]) -> Quest
     }
 }
 
-/// Creates an exam with the given questions and status.
+/// Creates an all-or-nothing exam with the given questions and status.
 pub async fn exam(
     app: &TestApp,
     status: ExamStatus,
     visibility: ResultVisibility,
+    qs: Vec<QuestionInput>,
+) -> Uuid {
+    exam_with_scoring(app, status, visibility, ScoringMode::AllOrNothing, qs).await
+}
+
+pub async fn exam_with_scoring(
+    app: &TestApp,
+    status: ExamStatus,
+    visibility: ResultVisibility,
+    scoring: ScoringMode,
     qs: Vec<QuestionInput>,
 ) -> Uuid {
     let db = &app.state.db;
@@ -205,6 +215,7 @@ pub async fn exam(
             description: "",
             duration_minutes: 30,
             result_visibility: visibility,
+            scoring,
         },
     )
     .await

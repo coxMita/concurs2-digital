@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT e.id, e.title, e.description, e.duration_minutes,\n                  e.status AS \"status: ExamStatus\",\n                  e.result_visibility AS \"result_visibility: ResultVisibility\",\n                  e.created_at,\n                  (SELECT count(*) FROM questions q WHERE q.exam_id = e.id) AS \"questions!\",\n                  (SELECT count(*) FROM students s WHERE s.exam_id = e.id) AS \"students!\",\n                  (SELECT count(*) FROM attempts a WHERE a.exam_id = e.id\n                     AND a.submitted_at IS NOT NULL) AS \"submitted!\"\n           FROM exams e ORDER BY e.created_at DESC",
+  "query": "SELECT e.id, e.title, e.description, e.duration_minutes,\n                  e.status AS \"status: ExamStatus\",\n                  e.result_visibility AS \"result_visibility: ResultVisibility\",\n                  e.scoring AS \"scoring: ScoringMode\",\n                  e.created_at,\n                  (SELECT count(*) FROM questions q WHERE q.exam_id = e.id) AS \"questions!\",\n                  (SELECT count(*) FROM students s WHERE s.exam_id = e.id) AS \"students!\",\n                  (SELECT count(*) FROM attempts a WHERE a.exam_id = e.id\n                     AND a.submitted_at IS NOT NULL) AS \"submitted!\"\n           FROM exams e ORDER BY e.created_at DESC",
   "describe": {
     "columns": [
       {
@@ -93,6 +93,27 @@
       },
       {
         "ordinal": 6,
+        "name": "scoring: ScoringMode",
+        "type_info": {
+          "Custom": {
+            "name": "scoring_mode",
+            "kind": {
+              "Enum": [
+                "all_or_nothing",
+                "partial"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "exams",
+            "name": "scoring"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -103,19 +124,19 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "questions!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "students!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "submitted!",
         "type_info": "Int8",
         "origin": "Expression"
@@ -132,10 +153,11 @@
       false,
       false,
       false,
+      false,
       null,
       null,
       null
     ]
   },
-  "hash": "56cd54336275839bda13b39c5d103a678d0e2c2fcba69df010906b43b369648e"
+  "hash": "d04c00e749cdf798c596ac7049cc41bd7c6a45b061aef74709b392c45ce97a51"
 }

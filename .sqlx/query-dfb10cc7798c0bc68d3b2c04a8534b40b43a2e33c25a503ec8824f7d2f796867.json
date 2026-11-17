@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE exams SET title = $2, description = $3, duration_minutes = $4,\n                result_visibility = $5, scoring = $6, updated_at = now()\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Int4",
+        {
+          "Custom": {
+            "name": "result_visibility",
+            "kind": {
+              "Enum": [
+                "none",
+                "score",
+                "score_and_answers"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "scoring_mode",
+            "kind": {
+              "Enum": [
+                "all_or_nothing",
+                "partial"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dfb10cc7798c0bc68d3b2c04a8534b40b43a2e33c25a503ec8824f7d2f796867"
+}

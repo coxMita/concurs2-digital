@@ -57,7 +57,7 @@ pub struct ExportStudent {
     pub attempt_id: Option<Uuid>,
     pub started_at: Option<DateTime<Utc>>,
     pub submitted_at: Option<DateTime<Utc>>,
-    pub earned_points: Option<i32>,
+    pub earned_points: Option<f64>,
     pub max_points: Option<i32>,
     pub percentage: Option<f64>,
     pub focus_losses: Option<i32>,

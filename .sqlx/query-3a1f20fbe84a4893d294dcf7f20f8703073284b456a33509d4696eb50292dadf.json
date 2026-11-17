@@ -105,7 +105,7 @@
       {
         "ordinal": 9,
         "name": "earned_points",
-        "type_info": "Int4",
+        "type_info": "Float8",
         "origin": {
           "Table": {
             "table": "attempts",

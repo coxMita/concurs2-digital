@@ -2,7 +2,7 @@
 
 use rust_xlsxwriter::{Color, Format, FormatAlign, FormatBorder, Workbook, XlsxError};
 
-use crate::services::grading::Outcome;
+use crate::services::grading::{Outcome, fmt_points};
 
 fn header_format() -> Format {
     Format::new()
@@ -54,13 +54,15 @@ pub struct ResultRow {
     pub name: String,
     pub username: String,
     pub percentage: Option<f64>,
-    pub earned: Option<i32>,
+    pub earned: Option<f64>,
     pub max: Option<i32>,
     pub status: &'static str,
     pub started_at: String,
     pub submitted_at: String,
     /// Outcome per question in canonical order (None = not part of the attempt).
     pub outcomes: Vec<Option<Outcome>>,
+    /// Share of each question's points earned (0..=1), same order as `outcomes`.
+    pub fractions: Vec<f64>,
     /// Chosen options per question, e.g. "A) 2; C) 4" (letters in canonical order).
     pub answers: Vec<String>,
     /// Integrity signals (None = never started).
@@ -157,7 +159,7 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
                 ws.write_number_with_format(r, 2, p, &pct)?;
             }
             if let (Some(e), Some(m)) = (row.earned, row.max) {
-                ws.write_string(r, 3, format!("{e} / {m}"))?;
+                ws.write_string(r, 3, format!("{} / {m}", fmt_points(e)))?;
             }
             ws.write_string(r, 4, row.status)?;
             ws.write_string(r, 5, &row.started_at)?;
@@ -168,6 +170,15 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
                 match o {
                     Some(Outcome::Correct) => {
                         ws.write_string_with_format(r, c, format!("Corect: {chosen}"), &ok)?
+                    }
+                    Some(Outcome::Partial) => {
+                        let share = row.fractions.get(i).copied().unwrap_or(0.0) * 100.0;
+                        ws.write_string_with_format(
+                            r,
+                            c,
+                            format!("Parțial {}%: {chosen}", fmt_points(share)),
+                            &warn,
+                        )?
                     }
                     Some(Outcome::Wrong) => {
                         ws.write_string_with_format(r, c, format!("Greșit: {chosen}"), &bad)?
@@ -257,6 +268,8 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
             "Greșite",
             "Fără răspuns",
             "Corect (%)",
+            "Parțiale",
+            "Punctaj mediu (%)",
         ]
         .iter()
         .enumerate()
@@ -265,16 +278,23 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
         }
         for (i, q) in questions.iter().enumerate() {
             let r = i as u32 + 1;
-            let (mut c, mut w, mut n) = (0u32, 0u32, 0u32);
+            let (mut c, mut part, mut w, mut n) = (0u32, 0u32, 0u32, 0u32);
+            let mut share_sum = 0.0;
             for row in rows {
-                match row.outcomes.get(i).copied().flatten() {
+                let o = row.outcomes.get(i).copied().flatten();
+                if o.is_some() {
+                    share_sum += row.fractions.get(i).copied().unwrap_or(0.0);
+                }
+                match o {
                     Some(Outcome::Correct) => c += 1,
+                    Some(Outcome::Partial) => part += 1,
                     Some(Outcome::Wrong) => w += 1,
                     Some(Outcome::Unanswered) => n += 1,
                     None => {}
                 }
             }
-            let total = c + w + n;
+            // Partial answers count as answered but not as fully correct.
+            let total = c + part + w + n;
             ws.write_string(r, 0, format!("Î{}", i + 1))?;
             ws.write_string_with_format(r, 1, &q.text, &wrap)?;
             ws.write_number(r, 2, f64::from(c))?;
@@ -286,10 +306,17 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
                 (f64::from(c) / f64::from(total) * 10_000.0).round() / 100.0
             };
             ws.write_number_with_format(r, 5, p, &pct)?;
+            ws.write_number(r, 6, f64::from(part))?;
+            let avg = if total == 0 {
+                0.0
+            } else {
+                (share_sum / f64::from(total) * 10_000.0).round() / 100.0
+            };
+            ws.write_number_with_format(r, 7, avg, &pct)?;
         }
         ws.set_column_width(0, 6)?;
         ws.set_column_width(1, 60)?;
-        for c in 2..6 {
+        for c in 2..8 {
             ws.set_column_width(c, 13)?;
         }
         ws.set_freeze_panes(1, 1)?;

@@ -22,13 +22,14 @@
 {% else %}
 <div class="table-wrap">
   <table class="table">
-    <thead><tr><th>Nr.</th><th>Întrebare</th><th class="num">Corecte</th><th class="num">Greșite</th><th class="num">Fără răspuns</th><th>Corect (%)</th></tr></thead>
+    <thead><tr><th>Nr.</th><th>Întrebare</th><th class="num">Corecte</th><th class="num">Parțiale</th><th class="num">Greșite</th><th class="num">Fără răspuns</th><th>Corect (%)</th></tr></thead>
     <tbody>
       {% for s in stats %}
       <tr>
         <td>Î{{ s.n }}</td>
         <td class="cell-text">{{ s.text }}</td>
         <td class="num cell-ok">{{ s.correct }}</td>
+        <td class="num">{{ s.partial }}</td>
         <td class="num cell-bad">{{ s.wrong }}</td>
         <td class="num">{{ s.unanswered }}</td>
         <td><div class="row nowrap"><meter class="meter" min="0" max="100" low="40" high="70" optimum="100" value="{{ s.pct }}">{{ s.pct }}%</meter><span class="small">{{ s.pct }}%</span></div></td>

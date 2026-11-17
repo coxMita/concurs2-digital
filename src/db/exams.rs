@@ -55,6 +55,30 @@ impl ResultVisibility {
     }
 }
 
+/// How multiple-answer questions are scored (see services::grading).
+#[derive(sqlx::Type, Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[sqlx(type_name = "scoring_mode", rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
+pub enum ScoringMode {
+    AllOrNothing,
+    Partial,
+}
+
+impl ScoringMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::AllOrNothing => "all_or_nothing",
+            Self::Partial => "partial",
+        }
+    }
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::AllOrNothing => "Totul sau nimic",
+            Self::Partial => "Punctaj parțial",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Exam {
     pub id: Uuid,
@@ -63,6 +87,7 @@ pub struct Exam {
     pub duration_minutes: i32,
     pub status: ExamStatus,
     pub result_visibility: ResultVisibility,
+    pub scoring: ScoringMode,
     pub created_at: DateTime<Utc>,
 }
 
@@ -79,6 +104,7 @@ pub struct ExamInput<'a> {
     pub description: &'a str,
     pub duration_minutes: i32,
     pub result_visibility: ResultVisibility,
+    pub scoring: ScoringMode,
 }
 
 pub async fn get(db: &PgPool, id: Uuid) -> Result<Option<Exam>, sqlx::Error> {
@@ -87,6 +113,7 @@ pub async fn get(db: &PgPool, id: Uuid) -> Result<Option<Exam>, sqlx::Error> {
         r#"SELECT id, title, description, duration_minutes,
                   status AS "status: ExamStatus",
                   result_visibility AS "result_visibility: ResultVisibility",
+                  scoring AS "scoring: ScoringMode",
                   created_at
            FROM exams WHERE id = $1"#,
         id
@@ -100,6 +127,7 @@ pub async fn list(db: &PgPool) -> Result<Vec<ExamSummary>, sqlx::Error> {
         r#"SELECT e.id, e.title, e.description, e.duration_minutes,
                   e.status AS "status: ExamStatus",
                   e.result_visibility AS "result_visibility: ResultVisibility",
+                  e.scoring AS "scoring: ScoringMode",
                   e.created_at,
                   (SELECT count(*) FROM questions q WHERE q.exam_id = e.id) AS "questions!",
                   (SELECT count(*) FROM students s WHERE s.exam_id = e.id) AS "students!",
@@ -119,6 +147,7 @@ pub async fn list(db: &PgPool) -> Result<Vec<ExamSummary>, sqlx::Error> {
                 duration_minutes: r.duration_minutes,
                 status: r.status,
                 result_visibility: r.result_visibility,
+                scoring: r.scoring,
                 created_at: r.created_at,
             },
             questions: r.questions,
@@ -130,12 +159,13 @@ pub async fn list(db: &PgPool) -> Result<Vec<ExamSummary>, sqlx::Error> {
 
 pub async fn create(db: &PgPool, input: &ExamInput<'_>) -> Result<Uuid, sqlx::Error> {
     sqlx::query_scalar!(
-        "INSERT INTO exams (title, description, duration_minutes, result_visibility)
-         VALUES ($1, $2, $3, $4) RETURNING id",
+        "INSERT INTO exams (title, description, duration_minutes, result_visibility, scoring)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id",
         input.title,
         input.description,
         input.duration_minutes,
         input.result_visibility as ResultVisibility,
+        input.scoring as ScoringMode,
     )
     .fetch_one(db)
     .await
@@ -144,13 +174,14 @@ pub async fn create(db: &PgPool, input: &ExamInput<'_>) -> Result<Uuid, sqlx::Er
 pub async fn update(db: &PgPool, id: Uuid, input: &ExamInput<'_>) -> Result<bool, sqlx::Error> {
     let r = sqlx::query!(
         "UPDATE exams SET title = $2, description = $3, duration_minutes = $4,
-                result_visibility = $5, updated_at = now()
+                result_visibility = $5, scoring = $6, updated_at = now()
          WHERE id = $1",
         id,
         input.title,
         input.description,
         input.duration_minutes,
         input.result_visibility as ResultVisibility,
+        input.scoring as ScoringMode,
     )
     .execute(db)
     .await?;
@@ -207,8 +238,8 @@ pub async fn duplicate(
 ) -> Result<Option<Uuid>, sqlx::Error> {
     let mut tx = db.begin().await?;
     let Some(new_id) = sqlx::query_scalar!(
-        "INSERT INTO exams (title, description, duration_minutes, result_visibility)
-         SELECT title || ' (copie)', description, duration_minutes, result_visibility
+        "INSERT INTO exams (title, description, duration_minutes, result_visibility, scoring)
+         SELECT title || ' (copie)', description, duration_minutes, result_visibility, scoring
          FROM exams WHERE id = $1 RETURNING id",
         id
     )

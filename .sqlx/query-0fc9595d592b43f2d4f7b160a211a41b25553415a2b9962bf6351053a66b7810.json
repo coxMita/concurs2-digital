@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO exams (title, description, duration_minutes, result_visibility)\n         VALUES ($1, $2, $3, $4) RETURNING id",
+  "query": "INSERT INTO exams (title, description, duration_minutes, result_visibility, scoring)\n         VALUES ($1, $2, $3, $4, $5) RETURNING id",
   "describe": {
     "columns": [
       {
@@ -31,6 +31,17 @@
               ]
             }
           }
+        },
+        {
+          "Custom": {
+            "name": "scoring_mode",
+            "kind": {
+              "Enum": [
+                "all_or_nothing",
+                "partial"
+              ]
+            }
+          }
         }
       ]
     },
@@ -38,5 +49,5 @@
       false
     ]
   },
-  "hash": "c30c1827fdb4201e1f1526cb559dd827c239b3fb6232d7057ea7311a5c343191"
+  "hash": "0fc9595d592b43f2d4f7b160a211a41b25553415a2b9962bf6351053a66b7810"
 }

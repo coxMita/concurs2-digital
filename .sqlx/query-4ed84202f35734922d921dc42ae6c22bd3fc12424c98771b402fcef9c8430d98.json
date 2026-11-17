@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, title, description, duration_minutes,\n                  status AS \"status: ExamStatus\",\n                  result_visibility AS \"result_visibility: ResultVisibility\",\n                  created_at\n           FROM exams WHERE id = $1",
+  "query": "SELECT id, title, description, duration_minutes,\n                  status AS \"status: ExamStatus\",\n                  result_visibility AS \"result_visibility: ResultVisibility\",\n                  scoring AS \"scoring: ScoringMode\",\n                  created_at\n           FROM exams WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -93,6 +93,27 @@
       },
       {
         "ordinal": 6,
+        "name": "scoring: ScoringMode",
+        "type_info": {
+          "Custom": {
+            "name": "scoring_mode",
+            "kind": {
+              "Enum": [
+                "all_or_nothing",
+                "partial"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "exams",
+            "name": "scoring"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -115,8 +136,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "b9300eaa4fa76f0199f94b4be251e1dfafa43efdec4bf8dfa274b2fb3fa3abe0"
+  "hash": "4ed84202f35734922d921dc42ae6c22bd3fc12424c98771b402fcef9c8430d98"
 }

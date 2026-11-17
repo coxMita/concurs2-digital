@@ -40,6 +40,14 @@
           <input type="radio" id="vis-all" name="result_visibility" value="score_and_answers"{% if visibility == "score_and_answers" %} checked{% endif %}><label for="vis-all">Nota + răspunsuri</label>
         </div>
       </div>
+      <div class="field">
+        <span class="label" id="scoring-label">Punctaj la întrebările cu mai multe răspunsuri corecte</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="scoring-label">
+          <input type="radio" id="sc-partial" name="scoring" value="partial"{% if scoring == "partial" %} checked{% endif %}><label for="sc-partial">Punctaj parțial</label>
+          <input type="radio" id="sc-all" name="scoring" value="all_or_nothing"{% if scoring == "all_or_nothing" %} checked{% endif %}><label for="sc-all">Totul sau nimic</label>
+        </div>
+        <p class="hint">Parțial: fiecare variantă corectă bifată aduce o parte din punctaj, fiecare greșită scade (minimum 0). Exemplu cu A, B corecte din 4: A = 50%, A+B = 100%, A+C = 0, A+B+C = 50%, toate = 0. „Totul sau nimic”: punctaj doar dacă sunt bifate exact variantele corecte.</p>
+      </div>
       <div class="form-actions">
         <button class="btn btn--primary" type="submit">{% if exam.is_some() %}Salvează{% else %}Creează testul{% endif %}</button>
       </div>

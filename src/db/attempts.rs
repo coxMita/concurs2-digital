@@ -13,7 +13,7 @@ pub struct AttemptState {
     pub started_at: DateTime<Utc>,
     pub deadline: DateTime<Utc>,
     pub submitted_at: Option<DateTime<Utc>>,
-    pub earned_points: Option<i32>,
+    pub earned_points: Option<f64>,
     pub max_points: i32,
     pub percentage: Option<f64>,
     /// Set while the student is outside the exam page (integrity tracking).

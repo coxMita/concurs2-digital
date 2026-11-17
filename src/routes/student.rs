@@ -535,7 +535,7 @@ pub struct ReviewQ {
     pub text: String,
     pub image: Option<String>,
     pub points: i32,
-    pub outcome: &'static str,
+    pub outcome: String,
     pub outcome_class: &'static str,
     pub multiple: bool,
     pub options: Vec<ReviewOpt>,
@@ -548,7 +548,7 @@ struct ResultPage {
     title: String,
     visibility: &'static str,
     percentage: String,
-    earned: i32,
+    earned: String,
     max: i32,
     /// SVG stroke-dasharray for the score ring (no inline styles: CSP).
     ring: String,
@@ -588,7 +588,7 @@ pub async fn result(State(state): State<AppState>, student: CurrentStudent) -> A
         title: content.exam.title.clone(),
         visibility: visibility.as_str(),
         percentage: format!("{pct:.2}").replace('.', ","),
-        earned: attempt.earned_points.unwrap_or(0),
+        earned: grading::fmt_points(attempt.earned_points.unwrap_or(0.0)),
         max: attempt.max_points,
         ring: format!("{filled:.2} {CIRC:.2}"),
         review,
@@ -607,7 +607,7 @@ fn build_review(
         .enumerate()
         .map(|(i, (q, opt_order))| {
             let selected = sels.get(&q.id);
-            let outcome = grading::question_outcome(q, selected);
+            let score = grading::question_score(q, selected, content.exam.scoring);
             let options = opt_order
                 .iter()
                 .filter_map(|oid| q.options.iter().find(|o| o.id == *oid))
@@ -627,10 +627,18 @@ fn build_review(
                     }
                 })
                 .collect();
-            let (label, class) = match outcome {
-                Outcome::Correct => ("Corect", "ok"),
-                Outcome::Wrong => ("Greșit", "danger"),
-                Outcome::Unanswered => ("Fără răspuns", "draft"),
+            let (label, class) = match score.outcome {
+                Outcome::Correct => ("Corect".to_string(), "ok"),
+                Outcome::Partial => (
+                    format!(
+                        "Parțial: {} din {} p",
+                        grading::fmt_points(f64::from(q.points) * score.fraction),
+                        q.points
+                    ),
+                    "warn",
+                ),
+                Outcome::Wrong => ("Greșit".to_string(), "danger"),
+                Outcome::Unanswered => ("Fără răspuns".to_string(), "draft"),
             };
             ReviewQ {
                 n: i + 1,

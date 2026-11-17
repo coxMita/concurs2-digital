@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use crate::{
     auth::CurrentAdmin,
-    db::exams::{self, Exam, ExamInput, ExamStatus, ExamSummary, ResultVisibility},
+    db::exams::{self, Exam, ExamInput, ExamStatus, ExamSummary, ResultVisibility, ScoringMode},
     error::{AppError, AppResult},
     services::{finalizer, uploads},
     state::AppState,
@@ -46,6 +46,7 @@ struct ExamFormPage {
     description: String,
     duration: i32,
     visibility: &'static str,
+    scoring: &'static str,
     error: Option<String>,
     locked: bool,
 }
@@ -57,6 +58,12 @@ pub struct ExamForm {
     description: String,
     duration_minutes: String,
     result_visibility: ResultVisibility,
+    #[serde(default = "default_scoring")]
+    scoring: ScoringMode,
+}
+
+fn default_scoring() -> ScoringMode {
+    ScoringMode::Partial
 }
 
 impl ExamForm {
@@ -84,6 +91,7 @@ pub async fn new_page(admin: CurrentAdmin) -> AppResult<Html<String>> {
         description: String::new(),
         duration: 30,
         visibility: "score",
+        scoring: ScoringMode::Partial.as_str(),
         error: None,
         locked: false,
     })
@@ -104,6 +112,7 @@ pub async fn create(
             description: form.description,
             duration: 30,
             visibility: form.result_visibility.as_str(),
+            scoring: form.scoring.as_str(),
             error: Some(error),
             locked: false,
         })?
@@ -116,6 +125,7 @@ pub async fn create(
                     description: form.description.trim(),
                     duration_minutes: duration,
                     result_visibility: form.result_visibility,
+                    scoring: form.scoring,
                 },
             )
             .await?;
@@ -140,6 +150,7 @@ pub async fn edit_page(
         description: exam.description.clone(),
         duration: exam.duration_minutes,
         visibility: exam.result_visibility.as_str(),
+        scoring: exam.scoring.as_str(),
         exam: Some(exam),
         tab: "setari",
         error: None,
@@ -157,6 +168,7 @@ pub async fn update(
     match form.validate() {
         Err(e) => admin.flash("error", e).await?,
         Ok(duration) => {
+            let before = load(&state, id).await?;
             let ok = exams::update(
                 &state.db,
                 id,
@@ -165,6 +177,7 @@ pub async fn update(
                     description: form.description.trim(),
                     duration_minutes: duration,
                     result_visibility: form.result_visibility,
+                    scoring: form.scoring,
                 },
             )
             .await?;
@@ -172,7 +185,18 @@ pub async fn update(
                 return Err(AppError::NotFound);
             }
             state.cache.invalidate(id).await;
-            admin.flash("ok", "Setările au fost salvate.").await?;
+            if before.scoring != form.scoring {
+                // Submitted grades follow the new rule right away.
+                let n = finalizer::regrade_exam(&state, id).await?;
+                admin
+                    .flash(
+                        "ok",
+                        format!("Setările au fost salvate. Notele a {n} lucrări trimise au fost recalculate după noua regulă de punctaj."),
+                    )
+                    .await?;
+            } else {
+                admin.flash("ok", "Setările au fost salvate.").await?;
+            }
         }
     }
     Ok(Redirect::to(&back))

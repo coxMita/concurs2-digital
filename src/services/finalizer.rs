@@ -83,7 +83,11 @@ async fn grade_and_store(
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
-        let g = grading::grade(qs, selections_of.get(attempt_id).unwrap_or(&empty));
+        let g = grading::grade(
+            qs,
+            selections_of.get(attempt_id).unwrap_or(&empty),
+            content.exam.scoring,
+        );
         earned.push(g.earned);
         max.push(g.max);
         pct.push(g.percentage);
@@ -94,7 +98,7 @@ async fn grade_and_store(
         "UPDATE attempts a SET
             earned_points = v.e, max_points = v.m, percentage = v.p,
             submitted_at = CASE WHEN $5 THEN LEAST(now(), a.deadline) ELSE a.submitted_at END
-         FROM unnest($1::uuid[], $2::int[], $3::int[], $4::float8[]) AS v(id, e, m, p)
+         FROM unnest($1::uuid[], $2::float8[], $3::int[], $4::float8[]) AS v(id, e, m, p)
          WHERE a.id = v.id",
         &ids,
         &earned,

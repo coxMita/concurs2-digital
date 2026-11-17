@@ -187,6 +187,7 @@ pub struct QuestionStat {
     pub n: usize,
     pub text: String,
     pub correct: usize,
+    pub partial: usize,
     pub wrong: usize,
     pub unanswered: usize,
     pub pct: f64,
@@ -259,7 +260,7 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
                         .collect()
                 }
             };
-            let outcomes = match s.attempt_id {
+            let scores: Vec<Option<grading::QuestionScore>> = match s.attempt_id {
                 None => vec![None; content.questions.len()],
                 Some(aid) => {
                     let in_attempt = data.attempt_questions.get(&aid);
@@ -268,13 +269,18 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
                         .questions
                         .iter()
                         .map(|q| {
-                            in_attempt
-                                .is_some_and(|set| set.contains(&q.id))
-                                .then(|| grading::question_outcome(q, sels.get(&q.id)))
+                            in_attempt.is_some_and(|set| set.contains(&q.id)).then(|| {
+                                grading::question_score(q, sels.get(&q.id), content.exam.scoring)
+                            })
                         })
                         .collect()
                 }
             };
+            let outcomes = scores.iter().map(|x| x.map(|x| x.outcome)).collect();
+            let fractions = scores
+                .iter()
+                .map(|x| x.map_or(0.0, |x| x.fraction))
+                .collect();
             let status = match (s.started_at, s.submitted_at) {
                 (None, _) => "Neînceput",
                 (Some(_), None) => "În desfășurare",
@@ -291,6 +297,7 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
                 started_at: fmt_dt_opt(&s.started_at),
                 submitted_at: fmt_dt_opt(&s.submitted_at),
                 outcomes,
+                fractions,
                 answers,
                 focus_losses: s.focus_losses,
                 away_seconds: s.focus_away_ms.map(|ms| (ms + 500) / 1000),
@@ -323,20 +330,22 @@ pub async fn results_page(
         .iter()
         .enumerate()
         .map(|(i, q)| {
-            let (mut c, mut w, mut u) = (0, 0, 0);
+            let (mut c, mut p, mut w, mut u) = (0, 0, 0, 0);
             for r in &rows {
                 match r.outcomes[i] {
                     Some(Outcome::Correct) => c += 1,
+                    Some(Outcome::Partial) => p += 1,
                     Some(Outcome::Wrong) => w += 1,
                     Some(Outcome::Unanswered) => u += 1,
                     None => {}
                 }
             }
-            let total = c + w + u;
+            let total = c + p + w + u;
             QuestionStat {
                 n: i + 1,
                 text: q.text.clone(),
                 correct: c,
+                partial: p,
                 wrong: w,
                 unanswered: u,
                 pct: if total == 0 {
