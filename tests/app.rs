@@ -845,3 +845,56 @@ async fn integrity_events_are_recorded_and_reported(pool: PgPool) {
     assert_eq!(res.get_value((1, 12)), Some(&Data::Float(2.0)));
     assert_eq!(res.get_value((1, 13)), Some(&Data::Float(1.0)));
 }
+
+#[sqlx::test]
+async fn reset_password_is_shown_under_the_student_once(pool: PgPool) {
+    let app = spawn(pool.clone()).await;
+    let exam = exam(
+        &app,
+        ExamStatus::Open,
+        ResultVisibility::Score,
+        three_questions(),
+    )
+    .await;
+    student(&app, exam, "ana", "old-pass-1").await;
+    let sid: Uuid = sqlx::query_scalar("SELECT id FROM students")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let mut admin = admin_client(&app).await;
+    admin.get(&format!("/admin/teste/{exam}/elevi")).await;
+    let r = admin
+        .post(&format!("/admin/teste/{exam}/elevi/{sid}/parola"), &[])
+        .await;
+    assert_eq!(r.status, StatusCode::SEE_OTHER);
+
+    let page = admin
+        .get(&format!("/admin/teste/{exam}/elevi"))
+        .await
+        .text();
+    let start = page
+        .find("class=\"new-password\">")
+        .expect("password shown")
+        + 21;
+    let pw = page[start..start + 8].to_string();
+    assert!(
+        page.contains("class=\"reset-row\""),
+        "shown under the student's row"
+    );
+
+    // Shown only once.
+    let again = admin
+        .get(&format!("/admin/teste/{exam}/elevi"))
+        .await
+        .text();
+    assert!(!again.contains("new-password\">"));
+
+    // The new password works, the old one does not.
+    let mut s = Client::new(&app);
+    s.get("/").await;
+    let old = s
+        .post("/", &[("username", "ana"), ("password", "old-pass-1")])
+        .await;
+    assert_eq!(old.status, StatusCode::UNAUTHORIZED);
+    student_client(&app, "ana", &pw).await;
+}

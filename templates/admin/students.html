@@ -3,6 +3,12 @@
 {% block content %}
 {% include "admin/_exam_head.html" %}
 
+{% if let Some(r) = reset %}
+<div class="alert alert--ok" role="status">
+  <p>Parola nouă pentru <code>{{ r.username }}</code>: <strong class="new-password">{{ r.password }}</strong>. Notați-o acum: nu va mai fi afișată. Sesiunile vechi ale elevului au fost închise.</p>
+</div>
+{% endif %}
+
 <section class="card mb-5" aria-labelledby="gen-title">
   <div class="card__head">
     <div>
@@ -92,6 +98,15 @@
           {% endif %}
         </td>
       </tr>
+      {% if let Some(r) = reset %}{% if r.student_id == s.id %}
+      <tr class="reset-row">
+        <td colspan="6">
+          <div class="alert alert--ok mb-0" role="status">
+            <p>Parola nouă pentru <code>{{ r.username }}</code>: <strong class="new-password">{{ r.password }}</strong>. Notați-o acum: nu va mai fi afișată.</p>
+          </div>
+        </td>
+      </tr>
+      {% endif %}{% endif %}
       {% endfor %}
     </tbody>
   </table>

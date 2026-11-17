@@ -36,7 +36,19 @@ struct StudentsPage {
     exam: Exam,
     tab: &'static str,
     students: Vec<StudentRow>,
+    /// Password just reset, shown once right under that student's row.
+    reset: Option<ResetPassword>,
 }
+
+/// Shown once after "Resetează parola" (kept in the admin's session until displayed).
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ResetPassword {
+    pub student_id: Uuid,
+    pub username: String,
+    pub password: String,
+}
+
+const RESET_KEY: &str = "reset_password";
 
 impl StudentsPage {
     fn pct(&self, s: &StudentRow) -> String {
@@ -51,11 +63,13 @@ pub async fn list(
 ) -> AppResult<Html<String>> {
     let exam = load(&state, id).await?;
     let students = students::list(&state.db, id).await?;
+    let reset = admin.session.remove::<ResetPassword>(RESET_KEY).await?;
     render(&StudentsPage {
         ctx: admin.ctx("teste").await?,
         exam,
         tab: "elevi",
         students,
+        reset,
     })
 }
 
@@ -271,14 +285,19 @@ pub async fn reset_password(
     let pw = generate_password();
     let hash = state.hasher.hash(pw.clone()).await?;
     match students::set_password(&state.db, id, sid, &hash).await? {
-        Some(username) => admin
-            .flash(
-                "ok",
-                format!(
-                    "Parola nouă pentru „{username}”: {pw} (notați-o acum: nu va mai fi afișată)."
-                ),
-            )
-            .await?,
+        Some(username) => {
+            admin
+                .session
+                .insert(
+                    RESET_KEY,
+                    ResetPassword {
+                        student_id: sid,
+                        username,
+                        password: pw,
+                    },
+                )
+                .await?
+        }
         None => return Err(AppError::NotFound),
     }
     Ok(Redirect::to(&format!("/admin/teste/{id}/elevi#s-{sid}")))

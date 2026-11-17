@@ -519,6 +519,10 @@ dialog.modal[open] { animation: modal-in var(--t-slow); }
 .question-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
 .question-foot__nav { display: flex; gap: var(--s-2); }
 
+/* Student list: password shown once after a reset */
+.new-password { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 1.15rem; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 6px; background: var(--c-surface); user-select: all; }
+.table .reset-row td { background: var(--c-success-tint); }
+
 /* Exam integrity: no text selection, faint per-student watermark, notice */
 .exam-protected { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .exam-protected input, .exam-protected textarea { -webkit-user-select: text; user-select: text; }
