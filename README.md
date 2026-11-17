@@ -60,24 +60,25 @@ work as-is):
 | Variable | Default | Meaning |
 |---|---|---|
 | `DOMAIN` | `localhost` | Your domain. With a real domain Caddy obtains a Let's Encrypt certificate automatically. With `localhost` it uses its own self-signed certificate (for testing on the server itself). |
-| `SETUP_TOKEN` | *(empty)* | Protects `/setup`. If empty, a random token is generated and printed in the logs. |
-| `POSTGRES_PASSWORD` | `concurs-change-me` | Database password. Postgres is not reachable from outside Docker, but **changing it before the first start is recommended**. |
+| `SETUP_TOKEN` | *(empty)* | Protects `/setup`. If empty, a random token is generated on the first start and written into `.env`. |
+| `POSTGRES_PASSWORD` | *(empty)* | Database password. If empty, a random 32-character password is generated on the first start and written into `.env`. **Don't change it afterwards**: the database keeps the password it was created with. |
 
-The session/CSRF signing key is generated automatically on first start and
-stored in the database.
+On the first `docker compose up`, a one-shot `init` container fills these empty
+secrets in `.env`, and Postgres and the app read them from there. The
+session/CSRF signing key is generated automatically and stored in the database.
 
 ### 4. Create the admin account (first run)
+
+The setup token is in `.env` (`SETUP_TOKEN=...`) and also in the logs:
 
 ```bash
 docker compose logs app
 ```
 
-The log shows a block like this:
-
 ```
 FIRST-RUN SETUP: no admin account exists yet.
 Open:  https://teste.liceul-meu.ro/setup
-Setup token (generated):  xxxxxxxxxxxxxxxxxxxxxxxx
+Setup token (from SETUP_TOKEN in .env):  xxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Open the link, enter the token and choose the admin username and password.
