@@ -43,7 +43,9 @@ impl Config {
 
     pub fn from_env() -> Self {
         let database_url = env::var("DATABASE_URL")
-            .unwrap_or_else(|_| "postgres://concurs:concurs@localhost:5432/concurs".into());
+            .ok()
+            .filter(|s| !s.trim().is_empty())
+            .unwrap_or_else(database_url_from_parts);
         let setup_token = env::var("SETUP_TOKEN")
             .ok()
             .map(|s| s.trim().to_string())
@@ -64,5 +66,43 @@ impl Config {
             login_per_ip_per_min: var("LOGIN_PER_IP_PER_MIN", 600),
             finalizer_interval_secs: var("FINALIZER_INTERVAL_SECS", 30),
         }
+    }
+}
+
+/// Builds the database URL from POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB /
+/// DB_HOST / DB_PORT (docker compose: the password lives only in .env).
+fn database_url_from_parts() -> String {
+    let user: String = var("POSTGRES_USER", "concurs".to_string());
+    let password: String = var("POSTGRES_PASSWORD", "concurs".to_string());
+    let db: String = var("POSTGRES_DB", "concurs".to_string());
+    let host: String = var("DB_HOST", "localhost".to_string());
+    let port: u16 = var("DB_PORT", 5432);
+    format!(
+        "postgres://{}:{}@{host}:{port}/{}",
+        encode(&user),
+        encode(&password),
+        encode(&db)
+    )
+}
+
+/// Percent-encodes everything except unreserved URL characters.
+fn encode(s: &str) -> String {
+    s.bytes()
+        .map(|b| {
+            if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.' | b'_' | b'~') {
+                (b as char).to_string()
+            } else {
+                format!("%{b:02X}")
+            }
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn encodes_url_parts() {
+        assert_eq!(super::encode("a b@c/d:é"), "a%20b%40c%2Fd%3A%C3%A9");
+        assert_eq!(super::encode("Abc-123_x.y~"), "Abc-123_x.y~");
     }
 }
