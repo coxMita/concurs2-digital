@@ -1,0 +1,179 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.full_name, s.username,\n                  a.started_at AS \"started_at?\", a.deadline AS \"deadline?\", a.submitted_at,\n                  a.percentage, a.login_count AS \"login_count?\",\n                  COALESCE(c.answered, 0) AS \"answered!\",\n                  a.focus_losses AS \"focus_losses?\", a.focus_away_ms AS \"focus_away_ms?\",\n                  a.away_since, a.copy_attempts AS \"copy_attempts?\",\n                  a.screenshot_attempts AS \"screenshot_attempts?\"\n           FROM students s\n           LEFT JOIN attempts a ON a.student_id = s.id\n           LEFT JOIN (\n               SELECT x.attempt_id, count(DISTINCT x.question_id) AS answered\n               FROM answer_selections x\n               JOIN attempts a2 ON a2.id = x.attempt_id\n               WHERE a2.exam_id = $1\n               GROUP BY x.attempt_id\n           ) c ON c.attempt_id = a.id\n           WHERE s.exam_id = $1\n           ORDER BY COALESCE(s.full_name, s.username), s.username",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "full_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "full_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "username",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "students",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "started_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "started_at"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "deadline?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "deadline"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "submitted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "submitted_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "percentage",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "percentage"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "login_count?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "login_count"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "answered!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "focus_losses?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "focus_losses"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "focus_away_ms?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "focus_away_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "away_since",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "away_since"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "copy_attempts?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "copy_attempts"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "screenshot_attempts?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "screenshot_attempts"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      null,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "b5602130f1150570d38ba168d944ced6433d4afda875235e0c8a6f6773975248"
+}

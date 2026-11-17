@@ -740,3 +740,107 @@ async fn credentials_are_generated_and_hashed(pool: PgPool) {
     let mut s = student_client(&app, "elev002", &pws[3]).await;
     assert_eq!(s.get("/test").await.location().as_deref(), Some("/nume"));
 }
+
+// ---- Integrity signals -------------------------------------------------------------
+
+#[sqlx::test]
+async fn integrity_events_are_recorded_and_reported(pool: PgPool) {
+    let app = spawn(pool.clone()).await;
+    let exam = exam(
+        &app,
+        ExamStatus::Open,
+        ResultVisibility::Score,
+        three_questions(),
+    )
+    .await;
+    student(&app, exam, "ana", "pw-ana-1").await;
+    let mut s = student_client(&app, "ana", "pw-ana-1").await;
+    let page = s.get("/test").await.text();
+    assert!(page.contains("sunt înregistrate"), "students are warned");
+    assert!(page.contains("class=\"watermark\""));
+    assert!(
+        page.contains("Elev ana · ana"),
+        "watermark names the student"
+    );
+
+    // Leave twice in a row counts once; the time away is measured by the server.
+    for kind in ["leave", "leave"] {
+        let r = s.hx_post("/test/eveniment", &[("kind", kind)]).await;
+        assert_eq!(r.status, StatusCode::NO_CONTENT);
+    }
+    sqlx::query("UPDATE attempts SET away_since = now() - interval '75 seconds'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    s.hx_post("/test/eveniment", &[("kind", "return")]).await;
+    s.hx_post("/test/eveniment", &[("kind", "copy")]).await;
+    s.hx_post("/test/eveniment", &[("kind", "copy")]).await;
+    s.hx_post("/test/eveniment", &[("kind", "screenshot")])
+        .await;
+    // Unknown kinds are ignored.
+    assert_eq!(
+        s.hx_post("/test/eveniment", &[("kind", "nonsense")])
+            .await
+            .status,
+        StatusCode::NO_CONTENT
+    );
+
+    let (losses, away_ms, copies, shots, away_since): (i32, i64, i32, i32, Option<chrono::DateTime<chrono::Utc>>) =
+        sqlx::query_as(
+            "SELECT focus_losses, focus_away_ms, copy_attempts, screenshot_attempts, away_since FROM attempts",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(losses, 1);
+    assert!((74_000..80_000).contains(&away_ms), "away {away_ms} ms");
+    assert_eq!((copies, shots), (2, 1));
+    assert!(away_since.is_none());
+
+    // Leaving and coming back by reloading the page (e.g. tab closed) also closes the interval.
+    s.hx_post("/test/eveniment", &[("kind", "leave")]).await;
+    s.get("/test").await;
+    let (losses, away_since): (i32, Option<chrono::DateTime<chrono::Utc>>) =
+        sqlx::query_as("SELECT focus_losses, away_since FROM attempts")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(losses, 2);
+    assert!(away_since.is_none());
+
+    // The teacher sees it live and in Excel.
+    let mut admin = admin_client(&app).await;
+    let live = admin
+        .get(&format!("/admin/teste/{exam}/live/tabel"))
+        .await
+        .text();
+    assert!(
+        live.contains("2 (1 min 15 s)") || live.contains("2 (1 min 1"),
+        "{live}"
+    );
+    assert!(live.contains("Copiere 2×"));
+    assert!(live.contains("Captură 1×"));
+
+    s.post("/test/finalizeaza", &[]).await;
+    // After submitting, events are ignored.
+    s.hx_post("/test/eveniment", &[("kind", "copy")]).await;
+    let copies: i32 = sqlx::query_scalar("SELECT copy_attempts FROM attempts")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(copies, 2);
+
+    let x = admin
+        .get(&format!("/admin/teste/{exam}/rezultate.xlsx"))
+        .await;
+    let mut wb: Xlsx<_> = open_workbook_from_rs(Cursor::new(x.body)).unwrap();
+    let res = wb.worksheet_range("Rezultate").unwrap();
+    // 7 fixed columns + 3 questions, then the integrity columns.
+    assert_eq!(cell(&res, 0, 10), "Ieșiri din pagină");
+    assert_eq!(cell(&res, 0, 11), "Timp în afara paginii (s)");
+    assert_eq!(cell(&res, 0, 12), "Încercări de copiere");
+    assert_eq!(cell(&res, 0, 13), "Capturi de ecran (PrintScreen)");
+    assert_eq!(res.get_value((1, 10)), Some(&Data::Float(2.0)));
+    assert_eq!(res.get_value((1, 12)), Some(&Data::Float(2.0)));
+    assert_eq!(res.get_value((1, 13)), Some(&Data::Float(1.0)));
+}

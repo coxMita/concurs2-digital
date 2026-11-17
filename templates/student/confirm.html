@@ -9,8 +9,9 @@
   </div>
 </div>
 {% endblock %}
-{% block main_class %}main--narrow{% endblock %}
+{% block main_class %}main--narrow exam-protected{% endblock %}
 {% block content %}
+<div class="watermark" aria-hidden="true">{% for _ in 0..60 %}<span>{{ watermark }}</span>{% endfor %}</div>
 <div class="card">
   <span class="eyebrow">Finalizare</span>
   <h1>Trimiți testul?</h1>

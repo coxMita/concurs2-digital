@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE attempts SET screenshot_attempts = screenshot_attempts + 1\n                 WHERE id = $1 AND submitted_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cedce589dbffaf4bb59f9427e9685fb311f009e63314330dae74359e42035eb5"
+}

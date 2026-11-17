@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE attempts\n                 SET focus_away_ms = focus_away_ms + GREATEST(0, LEAST(\n                         (EXTRACT(EPOCH FROM (LEAST(now(), deadline) - away_since)) * 1000)::bigint,\n                         14400000)),\n                     away_since = NULL\n                 WHERE id = $1 AND away_since IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3d670a77edece3b27286335dc13cad68a21ec44cc36f9d6b0d1e92853b33ad72"
+}

@@ -16,6 +16,11 @@ pub struct LiveRow {
     pub percentage: Option<f64>,
     pub login_count: Option<i32>,
     pub answered: i64,
+    pub focus_losses: Option<i32>,
+    pub focus_away_ms: Option<i64>,
+    pub away_since: Option<DateTime<Utc>>,
+    pub copy_attempts: Option<i32>,
+    pub screenshot_attempts: Option<i32>,
 }
 
 /// One query for the whole class: students, attempts and answered counts.
@@ -25,7 +30,10 @@ pub async fn live(db: &PgPool, exam_id: Uuid) -> Result<Vec<LiveRow>, sqlx::Erro
         r#"SELECT s.id, s.full_name, s.username,
                   a.started_at AS "started_at?", a.deadline AS "deadline?", a.submitted_at,
                   a.percentage, a.login_count AS "login_count?",
-                  COALESCE(c.answered, 0) AS "answered!"
+                  COALESCE(c.answered, 0) AS "answered!",
+                  a.focus_losses AS "focus_losses?", a.focus_away_ms AS "focus_away_ms?",
+                  a.away_since, a.copy_attempts AS "copy_attempts?",
+                  a.screenshot_attempts AS "screenshot_attempts?"
            FROM students s
            LEFT JOIN attempts a ON a.student_id = s.id
            LEFT JOIN (
@@ -52,6 +60,10 @@ pub struct ExportStudent {
     pub earned_points: Option<i32>,
     pub max_points: Option<i32>,
     pub percentage: Option<f64>,
+    pub focus_losses: Option<i32>,
+    pub focus_away_ms: Option<i64>,
+    pub copy_attempts: Option<i32>,
+    pub screenshot_attempts: Option<i32>,
 }
 
 pub struct ExportData {
@@ -67,7 +79,10 @@ pub async fn export_data(db: &PgPool, exam_id: Uuid) -> Result<ExportData, sqlx:
     let students = sqlx::query_as!(
         ExportStudent,
         r#"SELECT s.full_name, s.username, a.id AS "attempt_id?", a.started_at AS "started_at?",
-                  a.submitted_at, a.earned_points, a.max_points AS "max_points?", a.percentage
+                  a.submitted_at, a.earned_points, a.max_points AS "max_points?", a.percentage,
+                  a.focus_losses AS "focus_losses?", a.focus_away_ms AS "focus_away_ms?",
+                  a.copy_attempts AS "copy_attempts?",
+                  a.screenshot_attempts AS "screenshot_attempts?"
            FROM students s LEFT JOIN attempts a ON a.student_id = s.id
            WHERE s.exam_id = $1
            ORDER BY COALESCE(s.full_name, s.username), s.username"#,

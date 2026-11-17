@@ -38,6 +38,21 @@ pub struct LiveView {
     pub time_left: String,
     pub score: String,
     pub relogins: i32,
+    /// e.g. "3 (1 min 20 s)", empty if none.
+    pub focus: String,
+    /// Currently outside the page (in-progress attempts only), e.g. "2 min".
+    pub away_now: String,
+    pub copies: i32,
+    pub screenshots: i32,
+}
+
+fn fmt_secs(secs: i64) -> String {
+    let secs = secs.max(0);
+    match (secs / 60, secs % 60) {
+        (0, s) => format!("{s} s"),
+        (m, 0) => format!("{m} min"),
+        (m, s) => format!("{m} min {s} s"),
+    }
 }
 
 pub struct Counters {
@@ -138,6 +153,16 @@ pub async fn live_table(
                     String::new()
                 },
                 relogins: r.login_count.unwrap_or(1) - 1,
+                focus: match r.focus_losses.unwrap_or(0) {
+                    0 => String::new(),
+                    n => format!("{n} ({})", fmt_secs(r.focus_away_ms.unwrap_or(0) / 1000)),
+                },
+                away_now: match (r.away_since, r.submitted_at) {
+                    (Some(t), None) => fmt_secs((now - t).num_seconds()),
+                    _ => String::new(),
+                },
+                copies: r.copy_attempts.unwrap_or(0),
+                screenshots: r.screenshot_attempts.unwrap_or(0),
             }
         })
         .collect();
@@ -237,6 +262,10 @@ pub fn build_rows(content: &ExamContent, data: &ExportData) -> (Vec<QuestionInfo
                 started_at: fmt_dt_opt(&s.started_at),
                 submitted_at: fmt_dt_opt(&s.submitted_at),
                 outcomes,
+                focus_losses: s.focus_losses,
+                away_seconds: s.focus_away_ms.map(|ms| (ms + 500) / 1000),
+                copy_attempts: s.copy_attempts,
+                screenshot_attempts: s.screenshot_attempts,
             }
         })
         .collect();

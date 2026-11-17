@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE attempts SET focus_losses = focus_losses + 1, away_since = now()\n                 WHERE id = $1 AND submitted_at IS NULL AND away_since IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5b58016b16dcdd5cbb1c6e408a9ac76e6c57911a920e314dfb950d479aef0f75"
+}

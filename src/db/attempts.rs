@@ -16,6 +16,8 @@ pub struct AttemptState {
     pub earned_points: Option<i32>,
     pub max_points: i32,
     pub percentage: Option<f64>,
+    /// Set while the student is outside the exam page (integrity tracking).
+    pub away_since: Option<DateTime<Utc>>,
 }
 
 impl AttemptState {
@@ -41,7 +43,8 @@ pub async fn student_state(db: &PgPool, id: Uuid) -> Result<Option<StudentState>
     let r = sqlx::query!(
         r#"SELECT s.id, s.exam_id, s.full_name, s.username, s.active_session,
                   a.id AS "attempt_id?", a.started_at AS "started_at?", a.deadline AS "deadline?",
-                  a.submitted_at, a.earned_points, a.max_points AS "max_points?", a.percentage
+                  a.submitted_at, a.earned_points, a.max_points AS "max_points?", a.percentage,
+                  a.away_since
            FROM students s LEFT JOIN attempts a ON a.student_id = s.id
            WHERE s.id = $1"#,
         id
@@ -63,6 +66,7 @@ pub async fn student_state(db: &PgPool, id: Uuid) -> Result<Option<StudentState>
                 earned_points: r.earned_points,
                 max_points: r.max_points.unwrap_or(0),
                 percentage: r.percentage,
+                away_since: r.away_since,
             }),
             _ => None,
         },
@@ -221,4 +225,81 @@ pub async fn save_answer(
     )
     .fetch_one(db)
     .await
+}
+
+/// Integrity events sent by the exam page.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IntegrityEvent {
+    /// The page lost focus or was hidden (other tab, window or app).
+    Leave,
+    /// The student is back on the page.
+    Return,
+    /// Copy, cut, context menu or print was attempted (and blocked).
+    Copy,
+    /// The PrintScreen key was pressed.
+    Screenshot,
+}
+
+impl IntegrityEvent {
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "leave" => Some(Self::Leave),
+            "return" => Some(Self::Return),
+            "copy" => Some(Self::Copy),
+            "screenshot" => Some(Self::Screenshot),
+            _ => None,
+        }
+    }
+}
+
+/// Records an integrity event for an attempt still in progress (one statement).
+/// Time away is measured by the server between `Leave` and `Return`, capped at 4 h.
+pub async fn record_event(
+    db: &PgPool,
+    attempt_id: Uuid,
+    event: IntegrityEvent,
+) -> Result<(), sqlx::Error> {
+    match event {
+        IntegrityEvent::Leave => {
+            sqlx::query!(
+                "UPDATE attempts SET focus_losses = focus_losses + 1, away_since = now()
+                 WHERE id = $1 AND submitted_at IS NULL AND away_since IS NULL",
+                attempt_id
+            )
+            .execute(db)
+            .await?;
+        }
+        IntegrityEvent::Return => {
+            sqlx::query!(
+                "UPDATE attempts
+                 SET focus_away_ms = focus_away_ms + GREATEST(0, LEAST(
+                         (EXTRACT(EPOCH FROM (LEAST(now(), deadline) - away_since)) * 1000)::bigint,
+                         14400000)),
+                     away_since = NULL
+                 WHERE id = $1 AND away_since IS NOT NULL",
+                attempt_id
+            )
+            .execute(db)
+            .await?;
+        }
+        IntegrityEvent::Copy => {
+            sqlx::query!(
+                "UPDATE attempts SET copy_attempts = copy_attempts + 1
+                 WHERE id = $1 AND submitted_at IS NULL",
+                attempt_id
+            )
+            .execute(db)
+            .await?;
+        }
+        IntegrityEvent::Screenshot => {
+            sqlx::query!(
+                "UPDATE attempts SET screenshot_attempts = screenshot_attempts + 1
+                 WHERE id = $1 AND submitted_at IS NULL",
+                attempt_id
+            )
+            .execute(db)
+            .await?;
+        }
+    }
+    Ok(())
 }

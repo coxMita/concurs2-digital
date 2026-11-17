@@ -61,6 +61,11 @@ pub struct ResultRow {
     pub submitted_at: String,
     /// Outcome per question in canonical order (None = not part of the attempt).
     pub outcomes: Vec<Option<Outcome>>,
+    /// Integrity signals (None = never started).
+    pub focus_losses: Option<i32>,
+    pub away_seconds: Option<i64>,
+    pub copy_attempts: Option<i32>,
+    pub screenshot_attempts: Option<i32>,
 }
 
 pub struct QuestionInfo {
@@ -83,6 +88,9 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
     let none = Format::new()
         .set_background_color(Color::RGB(0xE7E9EB))
         .set_font_color(Color::RGB(0x5D7480));
+    let warn = Format::new()
+        .set_background_color(Color::RGB(0xFBF3D1))
+        .set_font_color(Color::RGB(0x4A3418));
     let wrap = Format::new().set_text_wrap().set_align(FormatAlign::Top);
 
     // Sheet 1: Rezultate
@@ -104,6 +112,19 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
         let q0 = fixed.len() as u16;
         for i in 0..questions.len() {
             ws.write_string_with_format(0, q0 + i as u16, format!("Î{}", i + 1), &head)?;
+        }
+        // Integrity columns come after the questions.
+        let g0 = q0 + questions.len() as u16;
+        for (j, h) in [
+            "Ieșiri din pagină",
+            "Timp în afara paginii (s)",
+            "Încercări de copiere",
+            "Capturi de ecran (PrintScreen)",
+        ]
+        .iter()
+        .enumerate()
+        {
+            ws.write_string_with_format(0, g0 + j as u16, *h, &head)?;
         }
         for (r, row) in rows.iter().enumerate() {
             let r = r as u32 + 1;
@@ -129,6 +150,22 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
                     None => ws,
                 };
             }
+            let ints = [
+                row.focus_losses.map(i64::from),
+                row.away_seconds,
+                row.copy_attempts.map(i64::from),
+                row.screenshot_attempts.map(i64::from),
+            ];
+            for (j, v) in ints.iter().enumerate() {
+                if let Some(v) = v {
+                    let c = g0 + j as u16;
+                    if *v > 0 {
+                        ws.write_number_with_format(r, c, *v as f64, &warn)?;
+                    } else {
+                        ws.write_number(r, c, *v as f64)?;
+                    }
+                }
+            }
         }
         ws.set_column_width(0, 28)?;
         ws.set_column_width(1, 18)?;
@@ -139,6 +176,9 @@ pub fn results_xlsx(questions: &[QuestionInfo], rows: &[ResultRow]) -> Result<Ve
         ws.set_column_width(6, 17)?;
         for i in 0..questions.len() {
             ws.set_column_width(q0 + i as u16, 13)?;
+        }
+        for j in 0..4 {
+            ws.set_column_width(g0 + j, 16)?;
         }
         ws.set_freeze_panes(1, 1)?;
     }

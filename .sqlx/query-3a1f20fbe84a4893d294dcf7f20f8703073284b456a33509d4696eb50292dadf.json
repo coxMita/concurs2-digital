@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT s.id, s.exam_id, s.full_name, s.username, s.active_session,\n                  a.id AS \"attempt_id?\", a.started_at AS \"started_at?\", a.deadline AS \"deadline?\",\n                  a.submitted_at, a.earned_points, a.max_points AS \"max_points?\", a.percentage\n           FROM students s LEFT JOIN attempts a ON a.student_id = s.id\n           WHERE s.id = $1",
+  "query": "SELECT s.id, s.exam_id, s.full_name, s.username, s.active_session,\n                  a.id AS \"attempt_id?\", a.started_at AS \"started_at?\", a.deadline AS \"deadline?\",\n                  a.submitted_at, a.earned_points, a.max_points AS \"max_points?\", a.percentage,\n                  a.away_since\n           FROM students s LEFT JOIN attempts a ON a.student_id = s.id\n           WHERE s.id = $1",
   "describe": {
     "columns": [
       {
@@ -134,6 +134,17 @@
             "name": "percentage"
           }
         }
+      },
+      {
+        "ordinal": 12,
+        "name": "away_since",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "away_since"
+          }
+        }
       }
     ],
     "parameters": {
@@ -153,8 +164,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "49a78666b2c86bd5268cf81524f0180955a6ec98c4f0ed1bcacf23e8b8e34dfa"
+  "hash": "3a1f20fbe84a4893d294dcf7f20f8703073284b456a33509d4696eb50292dadf"
 }

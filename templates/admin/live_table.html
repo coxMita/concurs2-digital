@@ -14,7 +14,7 @@
 <div class="table-wrap">
   <table class="table">
     <thead>
-      <tr><th>Elev</th><th>Stare</th><th class="num">Răspunsuri</th><th class="num">Timp rămas</th><th class="num">Nota</th><th>Observații</th></tr>
+      <tr><th>Elev</th><th>Stare</th><th class="num">Răspunsuri</th><th class="num">Timp rămas</th><th class="num">Nota</th><th>Ieșiri din pagină</th><th>Observații</th></tr>
     </thead>
     <tbody>
       {% for r in rows %}
@@ -24,7 +24,15 @@
         <td class="num">{{ r.answered }} / {{ questions }}</td>
         <td class="num">{{ r.time_left }}</td>
         <td class="num"><strong>{{ r.score }}</strong></td>
-        <td>{% if r.relogins > 0 %}<span class="badge badge--warn" title="Elevul s-a autentificat din nou în timpul testului">Reconectat {{ r.relogins }}×</span>{% endif %}</td>
+        <td>
+          {% if !r.away_now.is_empty() %}<span class="badge badge--danger" title="Elevul nu este acum pe pagina testului">În afara paginii de {{ r.away_now }}</span><br>{% endif %}
+          {% if !r.focus.is_empty() %}<span class="badge badge--warn" title="De câte ori a părăsit pagina testului (timp total)">{{ r.focus }}</span>{% endif %}
+        </td>
+        <td>
+          {% if r.relogins > 0 %}<span class="badge badge--warn" title="Elevul s-a autentificat din nou în timpul testului">Reconectat {{ r.relogins }}×</span>{% endif %}
+          {% if r.copies > 0 %}<span class="badge badge--warn" title="Încercări blocate de a copia, tipări sau deschide meniul">Copiere {{ r.copies }}×</span>{% endif %}
+          {% if r.screenshots > 0 %}<span class="badge badge--warn" title="Tasta PrintScreen apăsată (doar Windows)">Captură {{ r.screenshots }}×</span>{% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>

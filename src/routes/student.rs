@@ -230,6 +230,7 @@ pub struct Pill {
 #[template(path = "student/exam.html")]
 struct ExamPage {
     ctx: Ctx,
+    watermark: String,
     title: String,
     description: String,
     deadline: String,
@@ -282,7 +283,13 @@ async fn ensure_attempt(
             finalizer::finalize_attempt(state, a.id).await?;
             Ok(Err("/rezultat"))
         }
-        Some(a) => Ok(Ok(a.clone())),
+        Some(a) => {
+            // Back on the exam after leaving it (e.g. the tab was closed while away).
+            if a.away_since.is_some() {
+                attempts::record_event(&state.db, a.id, attempts::IntegrityEvent::Return).await?;
+            }
+            Ok(Ok(a.clone()))
+        }
         None => {
             if content.exam.status != ExamStatus::Open || content.questions.is_empty() {
                 return Ok(Err("/asteptare"));
@@ -346,6 +353,7 @@ pub async fn exam(
     let now = Utc::now();
     let secs = (attempt.deadline - now).num_seconds();
     Ok(render(&ExamPage {
+        watermark: watermark(&student),
         ctx: student.ctx().await?,
         title: content.exam.title.clone(),
         description: content.exam.description.clone(),
@@ -367,6 +375,15 @@ pub async fn exam(
         next: (number < total).then(|| number + 1),
     })?
     .into_response())
+}
+
+/// Text of the faint watermark on exam pages, so screenshots or photos show whose
+/// screen they came from.
+fn watermark(student: &CurrentStudent) -> String {
+    match &student.state.full_name {
+        Some(n) => format!("{n} · {}", student.state.username),
+        None => student.state.username.clone(),
+    }
 }
 
 fn hx_redirect(to: &'static str) -> Response {
@@ -428,10 +445,30 @@ pub async fn save_answer(
     Err(AppError::Forbidden)
 }
 
+/// Integrity events from the exam page (leaving the page, blocked copy, PrintScreen).
+/// Always answers 204: the page must not behave differently either way.
+pub async fn integrity_event(
+    State(state): State<AppState>,
+    student: CurrentStudent,
+    Form(fields): Form<Vec<(String, String)>>,
+) -> AppResult<StatusCode> {
+    let event = fields
+        .iter()
+        .find(|(k, _)| k == "kind")
+        .and_then(|(_, v)| attempts::IntegrityEvent::parse(v));
+    if let (Some(event), Some(a)) = (event, student.state.attempt.as_ref())
+        && a.in_progress()
+    {
+        attempts::record_event(&state.db, a.id, event).await?;
+    }
+    Ok(StatusCode::NO_CONTENT)
+}
+
 #[derive(Template)]
 #[template(path = "student/confirm.html")]
 struct ConfirmPage {
     ctx: Ctx,
+    watermark: String,
     title: String,
     deadline: String,
     now: String,
@@ -461,6 +498,7 @@ pub async fn confirm(
     let now = Utc::now();
     let secs = (attempt.deadline - now).num_seconds();
     Ok(render(&ConfirmPage {
+        watermark: watermark(&student),
         ctx: student.ctx().await?,
         title: content.exam.title.clone(),
         deadline: attempt.deadline.to_rfc3339(),

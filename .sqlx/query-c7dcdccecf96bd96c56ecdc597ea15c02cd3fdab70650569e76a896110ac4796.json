@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE attempts SET copy_attempts = copy_attempts + 1\n                 WHERE id = $1 AND submitted_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c7dcdccecf96bd96c56ecdc597ea15c02cd3fdab70650569e76a896110ac4796"
+}

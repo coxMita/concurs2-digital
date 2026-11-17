@@ -98,6 +98,7 @@ pub fn build(state: AppState, store: PostgresStore, key: Key) -> Router {
         .route("/asteptare/stare", get(routes::student::waiting_status))
         .route("/test", get(routes::student::exam))
         .route("/test/raspuns", post(routes::student::save_answer))
+        .route("/test/eveniment", post(routes::student::integrity_event))
         .route(
             "/test/finalizeaza",
             get(routes::student::confirm).post(routes::student::submit),

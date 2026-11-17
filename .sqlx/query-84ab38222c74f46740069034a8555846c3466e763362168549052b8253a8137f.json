@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT s.full_name, s.username, a.id AS \"attempt_id?\", a.started_at AS \"started_at?\",\n                  a.submitted_at, a.earned_points, a.max_points AS \"max_points?\", a.percentage\n           FROM students s LEFT JOIN attempts a ON a.student_id = s.id\n           WHERE s.exam_id = $1\n           ORDER BY COALESCE(s.full_name, s.username), s.username",
+  "query": "SELECT s.full_name, s.username, a.id AS \"attempt_id?\", a.started_at AS \"started_at?\",\n                  a.submitted_at, a.earned_points, a.max_points AS \"max_points?\", a.percentage,\n                  a.focus_losses AS \"focus_losses?\", a.focus_away_ms AS \"focus_away_ms?\",\n                  a.copy_attempts AS \"copy_attempts?\",\n                  a.screenshot_attempts AS \"screenshot_attempts?\"\n           FROM students s LEFT JOIN attempts a ON a.student_id = s.id\n           WHERE s.exam_id = $1\n           ORDER BY COALESCE(s.full_name, s.username), s.username",
   "describe": {
     "columns": [
       {
@@ -90,6 +90,50 @@
             "name": "percentage"
           }
         }
+      },
+      {
+        "ordinal": 8,
+        "name": "focus_losses?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "focus_losses"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "focus_away_ms?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "focus_away_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "copy_attempts?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "copy_attempts"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "screenshot_attempts?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "attempts",
+            "name": "screenshot_attempts"
+          }
+        }
       }
     ],
     "parameters": {
@@ -105,8 +149,12 @@
       true,
       true,
       false,
-      true
+      true,
+      false,
+      false,
+      false,
+      false
     ]
   },
-  "hash": "5afae951e5f9b4c2b5e03a1282fcc528d54d76cc0aaa985448f7dcd323e786b9"
+  "hash": "84ab38222c74f46740069034a8555846c3466e763362168549052b8253a8137f"
 }
