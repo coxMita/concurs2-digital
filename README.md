@@ -30,6 +30,21 @@ the VPS firewall:
 sudo ufw allow 80,443/tcp && sudo ufw allow 443/udp   # if ufw is enabled
 ```
 
+### No domain? Use sslip.io
+
+[sslip.io](https://sslip.io) is a free public DNS service: `1-2-3-4.sslip.io`
+resolves to `1.2.3.4`. It needs no registration, and Caddy gets a real Let's
+Encrypt certificate for it. After cloning, run this before `docker compose up -d`:
+
+```bash
+cp .env.example .env
+./scripts/use-sslip.sh          # sets DOMAIN=<your-ip>.sslip.io in .env
+```
+
+The site is then `https://<your-ip-with-dashes>.sslip.io`. The address stays
+the same as long as the VPS keeps its IP. Do not install a second Caddy on the
+host: the stack already includes one.
+
 ### 3. Get the code and start everything
 
 ```bash
