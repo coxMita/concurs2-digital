@@ -1,0 +1,20 @@
+# Optional: run WITHOUT Caddy/HTTPS, with the app published directly on a port
+# (default 8081). Use only for testing, e.g. when ports 80/443 are taken by
+# another site: passwords travel unencrypted over plain HTTP.
+#
+# Enable it by adding this line to .env, then run `docker compose up -d`:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.http.yml
+# Optional: HTTP_PORT=8081
+#
+# Back to HTTPS: remove the COMPOSE_FILE line and run `docker compose up -d --remove-orphans`.
+
+services:
+  app:
+    ports:
+      - "${HTTP_PORT:-8081}:8080"
+    environment:
+      # Browsers drop Secure cookies over plain HTTP, so the login would not stick.
+      COOKIE_SECURE: "false"
+  caddy:
+    # Not started in this mode (ports 80/443 may belong to another site).
+    profiles: ["https"]
