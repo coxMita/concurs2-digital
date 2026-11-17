@@ -109,6 +109,19 @@
     });
   }
 
+  // ---- Live dashboard: pause polling while the tab is hidden --------------
+  var live = document.querySelector("[data-live]");
+  if (live) {
+    // Skip polls while the page is not visible (other tab, minimized window).
+    live.addEventListener("htmx:beforeRequest", function (e) {
+      if (document.hidden) e.preventDefault();
+    });
+    // Fresh data immediately when coming back to the tab.
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) htmx.trigger(live, "refresh");
+    });
+  }
+
   // ---- Print buttons -----------------------------------------------------
   document.addEventListener("click", function (e) {
     if (e.target.closest("[data-print]")) window.print();

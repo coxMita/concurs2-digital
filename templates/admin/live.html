@@ -2,7 +2,7 @@
 {% block title %}Monitorizare · {{ exam.title }}{% endblock %}
 {% block content %}
 {% include "admin/_exam_head.html" %}
-<div id="live" hx-get="/admin/teste/{{ exam.id }}/live/tabel" hx-trigger="load, every 5s" hx-swap="innerHTML">
+<div id="live" hx-get="/admin/teste/{{ exam.id }}/live/tabel" hx-trigger="load, every 2s, refresh" hx-sync="this:drop" hx-swap="innerHTML" data-live>
   <p class="muted">Se încarcă…</p>
 </div>
 {% endblock %}
