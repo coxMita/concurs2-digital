@@ -27,7 +27,6 @@ services:
 
   app:
     build: .
-    image: concurs-app:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-concurs}:${POSTGRES_PASSWORD:-concurs-change-me}@db:5432/${POSTGRES_DB:-concurs}
