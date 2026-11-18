@@ -86,10 +86,23 @@
       report("copy");
     }
   });
-  // PrintScreen only reaches the page on keyup (Windows); Win+Shift+S shows up as "leave".
-  document.addEventListener("keyup", function (e) {
-    if (e.key === "PrintScreen") report("screenshot");
-  });
+  // PrintScreen: the OS usually swallows the key (Windows 11 Snipping Tool, GNOME,
+  // KDE), so depending on the system the page gets keydown, keyup, both or neither.
+  // Listen to both and count one press once. Win+Shift+S shows up as "leave".
+  function isShotKey(e) {
+    return e.key === "PrintScreen" || e.code === "PrintScreen" || e.keyCode === 44;
+  }
+  var shotDown = false; // keydown already counted; skip its matching keyup
+  window.addEventListener("keydown", function (e) {
+    if (!isShotKey(e) || e.repeat) return;
+    shotDown = true;
+    report("screenshot");
+  }, true);
+  window.addEventListener("keyup", function (e) {
+    if (!isShotKey(e)) return;
+    if (shotDown) { shotDown = false; return; }
+    report("screenshot");
+  }, true);
   window.addEventListener("beforeprint", function () { report("copy"); });
 
   // ---- Autosave feedback -------------------------------------------------
