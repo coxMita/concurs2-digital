@@ -16,7 +16,6 @@
 {% block main_class %}main--narrow exam-protected{% endblock %}
 {% block content %}
 <div class="watermark" aria-hidden="true">{% for _ in 0..60 %}<span>{{ watermark }}</span>{% endfor %}</div>
-<p class="integrity-note" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> Ieșirea din pagina testului, copierea textului și capturile de ecran sunt înregistrate și vizibile profesorului.</p>
 {% if number == 1 && !description.is_empty() %}
 <details class="card card--flat card--tight mb-5">
   <summary class="label">Instrucțiuni</summary>
