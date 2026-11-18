@@ -145,6 +145,12 @@
       return;
     }
     var k = (e.key || "").toLowerCase();
+    // Ctrl/Win+Shift+S: screenshot shortcuts (browser screenshot tool, Win+Shift+S).
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && k === "s") {
+      e.preventDefault();
+      if (!e.repeat) report("screenshot");
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && (k === "c" || k === "x" || k === "p" || k === "s" || k === "u" || k === "a")) {
       e.preventDefault();
       report("copy");
