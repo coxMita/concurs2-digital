@@ -21,7 +21,7 @@
   <div class="alert alert--warn" role="alert">
     <div>
       <p><strong>{{ unanswered.len() }} {% if unanswered.len() == 1 %}întrebare nu are{% else %}întrebări nu au{% endif %} răspuns:</strong></p>
-      <div class="qnav mt-4">
+      <div class="qnav mt-4" hx-boost="true">
         {% for n in unanswered %}<a href="/test?q={{ n }}" aria-label="Mergi la întrebarea {{ n }}">{{ n }}</a>{% endfor %}
       </div>
     </div>
@@ -33,7 +33,7 @@
       <input type="hidden" name="_csrf" value="{{ ctx.csrf }}">
       <button class="btn btn--primary btn--lg" type="submit">Trimite testul</button>
     </form>
-    <a class="btn btn--lg" href="/test">Înapoi la test</a>
+    <a class="btn btn--lg" href="/test" hx-boost="true">Înapoi la test</a>
   </div>
 </div>
 {% endblock %}

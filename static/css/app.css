@@ -551,6 +551,13 @@ dialog.modal[open] { animation: modal-in var(--t-slow); }
 .integrity-note { display: flex; align-items: center; gap: var(--s-2); font-size: var(--text-small); color: var(--c-text-muted); margin: 0 0 var(--s-4); }
 .integrity-note svg { width: 16px; height: 16px; flex: none; }
 .integrity-note--center { justify-content: center; text-align: center; }
+/* Exam lockdown: shield over the page until it is full screen and focused */
+.exam-hidden body { visibility: hidden; }
+.exam-shield { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: var(--s-5); background: var(--c-bg); font-family: var(--font); color: var(--c-text); }
+.exam-shield[hidden] { display: none; }
+.exam-shield__box { max-width: 30rem; text-align: center; }
+.exam-shield__title { margin: 0 0 var(--s-3); color: var(--c-text-strong); font-size: 1.5rem; }
+.exam-shield__text { margin: 0 0 var(--s-5); }
 
 /* Result */
 .score-ring { display: block; width: 180px; height: 180px; margin: var(--s-5) auto; }

@@ -763,7 +763,7 @@ async fn integrity_events_are_recorded_and_reported(pool: PgPool) {
     student(&app, exam, "ana", "pw-ana-1").await;
     let mut s = student_client(&app, "ana", "pw-ana-1").await;
     let page = s.get("/test").await.text();
-    assert!(page.contains("sunt înregistrate"), "students are warned");
+    assert!(page.contains("exam-protected"), "the exam page is protected");
     assert!(page.contains("class=\"watermark\""));
     assert!(
         page.contains("Elev ana · ana"),

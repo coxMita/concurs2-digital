@@ -23,7 +23,7 @@
 </details>
 {% endif %}
 
-<article class="card question-card" aria-labelledby="q-text">
+<article class="card question-card" aria-labelledby="q-text" hx-boost="true">
   <div class="row row--between mb-4">
     <span class="eyebrow mb-0">Întrebarea {{ number }} din {{ total }}</span>
     <span class="muted small">{{ points }} {% if points == 1 %}punct{% else %}puncte{% endif %}</span>
@@ -60,7 +60,7 @@
   </div>
 </article>
 
-<nav class="card card--flat card--tight mt-5" aria-label="Navigare întrebări">
+<nav class="card card--flat card--tight mt-5" aria-label="Navigare întrebări" hx-boost="true">
   <div class="row row--between mb-4">
     <span class="label">Întrebări</span>
     <span class="muted small"><span data-answered>{{ answered }}</span> din {{ total }} cu răspuns</span>
